@@ -16,7 +16,7 @@ buildscript {
 
 plugins {
     id "io.spring.dependency-management" version "0.5.2.RELEASE"
-    //id "com.jfrog.bintray" version "1.2"
+    id "com.jfrog.bintray" version "1.2"
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
@@ -30,37 +30,11 @@ apply plugin: "spring-boot"
 apply plugin: "org.grails.grails-plugin"
 apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
+apply plugin: "com.jfrog.bintray"
 apply plugin: "io.spring.dependency-management"
 // Used for publishing to central repository, remove if not needed
 apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
 apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            pom.withXml {
-                def pomNode = asNode()
-                pomNode.dependencyManagement.replaceNode {}
-
-                // simply remove dependencies without a version
-                // version-less dependencies are handled with dependencyManagement
-                // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
-                pomNode.dependencies.dependency.findAll {
-                    it.version.text().isEmpty()
-                }.each {
-                    it.replaceNode {}
-                }
-            }
-            artifactId project.name
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-            artifact source: "${sourceSets.main.output.classesDir}/META-INF/grails-plugin.xml",
-                    classifier: "plugin",
-                    extension: 'xml'
-        }
-    }
-}
 
 publishing {
     publications {
@@ -102,7 +76,7 @@ publishing {
     }
 }
 
-task install(dependsOn: project.tasks.withType(PublishToMavenLocal))
+//task install(dependsOn: project.tasks.withType(PublishToMavenLocal))
 
 bintray {
     user = System.getenv("BINTRAY_USER") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
