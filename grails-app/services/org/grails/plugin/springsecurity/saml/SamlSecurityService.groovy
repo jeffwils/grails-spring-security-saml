@@ -1,0 +1,50 @@
+package org.grails.plugin.springsecurity.saml
+
+import grails.plugin.springsecurity.SpringSecurityService
+
+/**
+ * A subclass of {@link SpringSecurityService} to replace {@link getCurrentUser()}
+ * method. The parent implementation performs a database load, but we do not have
+ * database users here, so we simply return the authentication details.
+ *
+ * @author alvaro.sanchez
+ */
+class SamlSecurityService extends SpringSecurityService {
+    SpringSamlUserDetailsService userDetailsService
+    def userCache
+    static transactional = false
+    def config
+
+    SpringSamlUserDetailsService getUserDetailsService() {
+        return userDetailsService
+    }
+
+    void setUserDetailsService(SpringSamlUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService
+    }
+
+    Object getCurrentUser() {
+        log.debug("SamlSecurityService getCurrentUser")
+        def userDetails
+        if (!isLoggedIn()) {
+            userDetails = null
+        } else {
+            userDetails = getAuthentication().details
+            if ( config?.saml.autoCreate.active ) {
+                userDetails =  getCurrentPersistedUser(userDetails)
+            }
+        }
+        return userDetails
+    }
+
+    private Object getCurrentPersistedUser(userDetails) {
+        if (userDetails) {
+            String className = config?.userLookup.userDomainClassName
+            String userKey = config?.saml.autoCreate.key
+            if (className && userKey) {
+                Class<?> userClass = grailsApplication.getDomainClass(className)?.clazz
+                return userClass."findBy${userKey.capitalize()}"(userDetails."$userKey")
+            }
+        } else { return null}
+    }
+}
