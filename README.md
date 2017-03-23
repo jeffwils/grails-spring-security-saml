@@ -4,6 +4,7 @@ This plugin provides SAML 2.0 support for Grails 3 applications.  It was origina
 
 ### Installation
 **Maven**
+
 ```xml
 <dependency>
   <groupId>org.grails.plugins</groupId>
@@ -12,7 +13,9 @@ This plugin provides SAML 2.0 support for Grails 3 applications.  It was origina
   <type>pom</type>
 </dependency>
 ```
+
 **Gradle**
+
 ```gradle
 compile 'org.grails.plugins:spring-security-saml:3.0.0'
 ```
@@ -24,12 +27,14 @@ All configuration items are preceeded with grails >> plugin >> springsecurity >>
 
 #### Authentication Provider
 The plugin sets up a SAML Authentication provider **samlAuthenticationProvider** which can be referenced in the Grails Spring Security Plugin configuration
+
 ```yaml
 grails:
    plugins:
       springsecurity:
          providerNames: ['samlAuthenticationProvider', ......]
 ```
+
 #### Property Table
 All of these properties can be put in either application.yml or application.groovy and they are all prefixed with:
 **grails.plugins.springsecurity.saml**
