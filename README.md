@@ -31,6 +31,8 @@ grails:
          providerNames: ['samlAuthenticationProvider', ......]
 ```
 #### Property Table
+All of these properties can be put in either application.yml or application.groovy and they are all prefixed with:
+**grails.plugins.springsecurity.saml**
 
 
 | Property | Syntax | Example Value | Description | 
