@@ -62,28 +62,76 @@ publishing {
     }
 }
 
-artifactory {
-    contextUrl = "https://gs-artifactrepo.cisco.com/artifactory"
-    publish {
-        repository {
-            repoKey = 'plugins-release-local' // The Artifactory repository key to publish to
-            username = "${artifactory_user}" // The publisher user name
-            password = "${artifactory_password}" // The publisher password
-        }
-        defaults {
-            // Reference to Gradle publications defined in the build script.
-            // This is how we tell the Artifactory Plugin which artifacts should be
-            // published to Artifactory.
-            publications('maven')
-            publishArtifacts = true
-            // Properties to be attached to the published artifacts.
-            properties = ['qa.level': 'basic', 'dev.team' : 'core']
-            // Publish generated POM files to Artifactory (true by default)
-            publishPom = true
+publishing {
+    publications {
+        maven(MavenPublication) {
+            pom.withXml {
+                def pomNode = asNode()
+                pomNode.dependencyManagement.replaceNode {}
+
+                // simply remove dependencies without a version
+                // version-less dependencies are handled with dependencyManagement
+                // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
+                pomNode.dependencies.dependency.findAll {
+                    it.version.text().isEmpty()
+                }.each {
+                    it.replaceNode {}
+                }
+            }
+            artifactId project.name
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            artifact source:"${sourceSets.main.output.classesDir}/META-INF/grails-plugin.xml",
+                    classifier:"plugin",
+                    extension:'xml'
         }
     }
-    resolve {
-        repoKey = 'jcenter'
+
+    repositories {
+        maven {
+            credentials {
+                username System.getenv('GRAILS_CENTRAL_USERNAME') ?: project.properties.get('grailsPluginsUsername')
+                password System.getenv("GRAILS_CENTRAL_PASSWORD") ?: project.properties.get('grailsPluginsPassword')
+            }
+
+            if(version.endsWith('-SNAPSHOT')) {
+                url "https://repo.grails.org/grails/plugins3-snapshots-local"
+            }
+        }
+    }
+}
+
+task install(dependsOn: project.tasks.withType(PublishToMavenLocal))
+
+bintray {
+    user = System.getenv("BINTRAY_USER") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
+    key = System.getenv("BINTRAY_KEY") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
+    publications = ['maven']
+    publish = true
+    pkg {
+        repo = project.hasProperty('repo') ? project.repo : 'plugins'
+        userOrg = project.hasProperty('userOrg') ? project.userOrg : 'grails'
+        name = "$project.name"
+        desc = project.hasProperty('desc') ? project.desc : "Grails $project.name plugin"
+        websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
+        issueTrackerUrl = project.hasProperty('issueTrackerUrl') ? project.issueTrackerUrl : "https://github.com/grails3-plugins/$project.name/issues"
+        vcsUrl = project.hasProperty('vcsUrl') ? project.vcsUrl : "https://github.com/grails3-plugins/$project.name"
+        licenses = project.hasProperty('license') ? [project.license] : ['Apache-2.0']
+        publicDownloadNumbers = true
+        version {
+            attributes = ['grails-plugin': "$project.group:$project.name"]
+            name = project.version
+            gpg {
+                sign = false
+                passphrase = System.getenv("SIGNING_PASSPHRASE") ?: project.hasProperty("signingPassphrase") ? project.signingPassphrase : ''
+            }
+            mavenCentralSync {
+                sync = false
+                user = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
+                password = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
+            }
+        }
     }
 }
 

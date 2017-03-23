@@ -51,7 +51,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     String authorEmail = 'jeffwilson70@gmail.com'
     String title = 'Spring Security Saml2 Plugin'
     String description = 'Grails 3 Saml2 Support for Spring Security plugin.'
-    String documentation = 'https://github.com/jeffwils/grails-spring-security-saml/wiki'
+    String documentation = 'https://jeffwils.github.io/grails-spring-security-saml/'
     String license = 'APACHE'
     //def organization = [name: 'Grails', url: 'http://www.grails.org/']
     def organization = [:]
