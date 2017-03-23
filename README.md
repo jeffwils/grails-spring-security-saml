@@ -33,6 +33,7 @@ grails:
 ```
 #### Property Table
 | Property | Syntax | Example Value | Description |
+
 |-------- |------ |------------- |----------- |
 
 | active | boolean | true | States whether or not SAML is active |
