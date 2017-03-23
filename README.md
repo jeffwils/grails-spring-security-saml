@@ -17,7 +17,6 @@ This plugin provides SAML 2.0 support for Grails 3 applications.  It was origina
 compile 'org.grails.plugins:spring-security-saml:3.0.0'
 ```
 
-
 ### Configuration
 The Plugin basically creates a bridge from your application configuration to both the Spring Security SAML Plugin and the Grails Spring Security Plugin.  Instead of having to map all of the beans in your application, The plugin wires the SAML Plugin beans from your application configuration.
 
