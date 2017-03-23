@@ -32,9 +32,8 @@ grails:
          providerNames: ['samlAuthenticationProvider', ......]
 ```
 #### Property Table
-| Property | Syntax | Example Value | Description |
-
-|-------- |------ |------------- |----------- |
+|Property | Syntax | Example Value | Description | 
+|-------- |------ |------------- |----------- | 
 
 | active | boolean | true | States whether or not SAML is active |
 
