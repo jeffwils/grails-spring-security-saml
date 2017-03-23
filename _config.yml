@@ -3,4 +3,4 @@ kramdown:
   input: GFM
   hard_wrap: true
   extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
-theme: jekyll-theme-slate
+theme: jekyll-theme-dinky
