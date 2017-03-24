@@ -45,7 +45,7 @@ All of these properties can be put in either application.yml or application.groo
 | active | boolean | true | States whether or not SAML is active |
 | afterLoginUrl | url string | '/' | Redirection Url in your application upon successful login from the IDP |
 | afterLogoutUrl | url string | '/' | Redirection Url in your application upon successful logout from the IDP |
-| responseSkew = 300 |
+| responseSkew | numeric | 60 | Time in seconds to account for differences in clock time between SP and IDP if their times should differ when attempting to compare request and assertion time index values  |
 | signatureAlgorithm | String Value | 'rsa-sha256' | Accepted Values are From org.opensaml.xml.signature.SignatureConstants |
 | digestAlgorithm | String Value | 'sha256' | Accepted Values are From org.opensaml.xml.encryption.EncryptionConstants |
 | userAttributeMappings | Map | [username:'funkyUserNameFromIDP'] | Allows Custom Mapping if both Application and IDP Attribute Names cannot be changed. |
