@@ -71,7 +71,7 @@ grails:
                   className: 'test.testRole'
                   nameField: 'auth'
             saml:
-                  userAttributeMappings: [:]
+                  userAttributeMappings: [username: 'username']
                   active: true
                   afterLoginUrl: '/'
                   afterLogoutUrl: '/'
