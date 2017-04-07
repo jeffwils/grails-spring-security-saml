@@ -2,6 +2,10 @@
 
 This plugin provides SAML 2.0 support for Grails 3 applications.  It was originally built from the Plugin that supported Grails 2 applications.  It enables SAML configuration directly from your application.yml or application.groovy without having to manually configure the Spring SAML Plugin and Grails Spring Security Plugin
 
+### Plugin Compatibility with Grails
+Grails 3.0.x - Use Version 3.0.0 of the plugin
+Grails 3.1.x - Use Version 3.1.0 of the plugin
+
 ### Installation
 **Maven**
 
