@@ -20,7 +20,7 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "3.0.0"
+version "3.0.1"
 group "org.grails.plugins"
 
 apply plugin: 'maven-publish'
@@ -34,58 +34,16 @@ apply plugin: "com.jfrog.bintray"
 apply plugin: "io.spring.dependency-management"
 // Used for publishing to central repository, remove if not needed
 apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            pom.withXml {
-                def pomNode = asNode()
-                pomNode.dependencyManagement.replaceNode {}
-
-                // simply remove dependencies without a version
-                // version-less dependencies are handled with dependencyManagement
-                // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
-                pomNode.dependencies.dependency.findAll {
-                    it.version.text().isEmpty()
-                }.each {
-                    it.replaceNode {}
-                }
-            }
-            artifactId project.name
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-            artifact source:"${sourceSets.main.output.classesDir}/META-INF/grails-plugin.xml",
-                    classifier:"plugin",
-                    extension:'xml'
-        }
-    }
-
-    repositories {
-        maven {
-            credentials {
-                username System.getenv('GRAILS_CENTRAL_USERNAME') ?: project.properties.get('grailsPluginsUsername')
-                password System.getenv("GRAILS_CENTRAL_PASSWORD") ?: project.properties.get('grailsPluginsPassword')
-            }
-
-            if(version.endsWith('-SNAPSHOT')) {
-                url "https://repo.grails.org/grails/plugins3-snapshots-local"
-            }
-        }
-    }
-}
-
-//task install(dependsOn: project.tasks.withType(PublishToMavenLocal))
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 bintray {
-    user = System.getenv("BINTRAY_USER") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
-    key = System.getenv("BINTRAY_KEY") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
+    user = System.getenv("BINTRAY_USER") ?: System.getProperty("bintray.user") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
+    key = System.getenv("BINTRAY_KEY") ?: System.getProperty("bintray.key") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
     publications = ['maven']
     publish = true
     pkg {
         repo = project.hasProperty('repo') ? project.repo : 'plugins'
-        userOrg = project.hasProperty('userOrg') ? project.userOrg : 'grails'
+        userOrg = '' //project.hasProperty('userOrg') ? project.userOrg : 'grails'
         name = "$project.name"
         desc = project.hasProperty('desc') ? project.desc : "Grails $project.name plugin"
         websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
@@ -108,6 +66,7 @@ bintray {
         }
     }
 }
+
 
 ext {
     grailsVersion = project.grailsVersion
