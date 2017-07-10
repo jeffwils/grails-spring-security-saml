@@ -77,6 +77,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     Closure doWithSpring() {
         {->
             def conf = SpringSecurityUtils.securityConfig
+            println "Active Flag ${conf.saml.active}"
             if (!conf || !conf.saml.active) { return }
 
 //            SpringSecurityUtils.loadSecondaryConfig 'DefaultSamlSecurityConfig'
@@ -139,52 +140,55 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             // TODO: Update to handle any type of meta data providers for default to file based instead http provider.
             log.debug "Dynamically defining bean metadata providers... "
             def providerBeanName = "extendedMetadataDelegate"
-            conf.saml.metadata.providers.each {k,v ->
+            conf.saml.metadata.providers.each { indivProv ->
+                indivProv.each {k,v ->
 
-                println "Registering metadata key: ${k} and value: $v"
-                "${providerBeanName}"(ExtendedMetadataDelegate) { extMetaDataDelegateBean ->
+                    println "Registering metadata key: ${k} and value: $v"
+                    "${providerBeanName}"(ExtendedMetadataDelegate) { extMetaDataDelegateBean ->
 
                         metadataTrustCheck = false
                         metadataRequireSignature = false
 
-                    filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
-                        if (v.startsWith("/") || v.indexOf(':') == 1) {
-                            File resource = new File(v)
-                            bean.constructorArgs = [resource]
-                        }else{
-                            def resource = new ClassPathResource(v)
-                            try{
-                                bean.constructorArgs = [resource.getFile()]
-                            }catch (FileNotFoundException fe){
-                                final InputStream is = resource.getInputStream();
-                                try {
-                                    final InputStreamReader reader = new InputStreamReader(is);
+                        filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
+                            if (v.startsWith("/") || v.indexOf(':') == 1) {
+                                File resource = new File(v)
+                                bean.constructorArgs = [resource]
+                            }else{
+                                def resource = new ClassPathResource(v)
+                                try{
+                                    bean.constructorArgs = [resource.getFile()]
+                                }catch (FileNotFoundException fe){
+                                    final InputStream is = resource.getInputStream();
                                     try {
-                                        final Document headerDoc = new SAXBuilder().build(reader);
-                                        XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-                                        String xmlString = outputter.outputString(headerDoc);
-                                        File temp = File.createTempFile("idp-local",".xml");
-                                        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-                                        bw.write(xmlString);
-                                        bw.close();
-                                        bean.constructorArgs = [temp]
-                                        temp.deleteOnExit();
+                                        final InputStreamReader reader = new InputStreamReader(is);
+                                        try {
+                                            final Document headerDoc = new SAXBuilder().build(reader);
+                                            XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+                                            String xmlString = outputter.outputString(headerDoc);
+                                            File temp = File.createTempFile("idp-local",".xml");
+                                            BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+                                            bw.write(xmlString);
+                                            bw.close();
+                                            bean.constructorArgs = [temp]
+                                            temp.deleteOnExit();
+                                        } finally {
+                                            reader.close();
+                                        }
                                     } finally {
-                                        reader.close();
+                                        is.close();
                                     }
-                                } finally {
-                                    is.close();
                                 }
                             }
+                            parserPool = ref('parserPool')
                         }
-                        parserPool = ref('parserPool')
+
+                        extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
                     }
 
-                    extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
+                    providers << ref(providerBeanName)
                 }
-
-                providers << ref(providerBeanName)
             }
+
 
     // you can only define a single service provider configuration
             def spFile = conf.saml.metadata.sp.file
@@ -260,7 +264,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                     }
                 }
 
-                // defaultIDP = conf.saml.metadata.providers[conf.saml.metadata.defaultIdp]
+                defaultIDP = conf.saml.metadata.defaultIdp
             }
 
 
@@ -271,8 +275,8 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 authorityJoinClassName = conf.userLookup.authorityJoinClassName
                 authorityNameField = conf.authority.nameField
                 samlAutoCreateActive = conf.saml.autoCreate.active
-                samlAutoAssignAuthorities = conf.saml.autoCreate.assignAuthorities
-                samlAutoCreateKey = conf.saml.autoCreate.key
+                samlAutoAssignAuthorities = (conf.saml.autoCreate.active) ? conf.saml.autoCreate.assignAuthorities : null
+                samlAutoCreateKey = (conf.saml.autoCreate.active) ? conf.saml.autoCreate.key : 'id'
                 samlUserAttributeMappings = conf.saml.userAttributeMappings
                 samlUserGroupAttribute = conf.saml.userGroupAttribute
                 samlUserGroupToRoleMapping = conf.saml.userGroupToRoleMapping
@@ -295,7 +299,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             authenticationFailureHandler(AjaxAwareAuthenticationFailureHandler) {
                 redirectStrategy = ref('redirectStrategy')
-                defaultFailureUrl = '/log4J/logging' //conf.failureHandler.defaultFailureUrl //'/login/authfail?login_error=1'
+                defaultFailureUrl = conf.saml.loginFailUrl ?: '/login/authfail?login_error=1'
                 useForward = conf.failureHandler.useForward // false
                 ajaxAuthenticationFailureUrl = conf.failureHandler.ajaxAuthFailUrl // '/login/authfail?ajax=true'
                 exceptionMappings = conf.failureHandler.exceptionMappings // [:]

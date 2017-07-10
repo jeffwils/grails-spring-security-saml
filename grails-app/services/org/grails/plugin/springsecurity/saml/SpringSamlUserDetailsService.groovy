@@ -47,7 +47,7 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     Boolean samlAutoAssignAuthorities = true
     String samlAutoCreateKey
     Map samlUserAttributeMappings
-    Map samlUserGroupToRoleMapping
+    List <Map> samlUserGroupToRoleMapping
     String samlUserGroupAttribute
     String userDomainClassName
 
@@ -130,17 +130,24 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
 
         samlGroups.eachWithIndex { groupName, groupIdx ->
             log.debug("Group Name From Saml ${groupName}")
-            def role = samlUserGroupToRoleMapping?.find{ it?.value == groupName }?.key
-            def authority
-            if (role){
-                log.debug("Found Role")
-                authority = getRole(role)
+            samlUserGroupToRoleMapping.each { mapEntry ->
+                def role = mapEntry?.find{ it?.value == groupName }?.key
+                def authority
+
+                if (role){
+                    log.debug("Found Role")
+
+                    authority = getRole(role)
+                }
+
+                if (authority) {
+                    log.debug("Found Authority Adding it")
+                    authorities.add(new SimpleGrantedAuthority(authority."$authorityNameField"))
+                }
             }
-            if (authority) {
-                log.debug("Found Authority Adding it")
-                authorities.add(new SimpleGrantedAuthority(authority."$authorityNameField"))
-            }
+
         }
+
         log.debug("Returning Authorities with  ${authorities?.size()} Authorities Added")
         return authorities
     }

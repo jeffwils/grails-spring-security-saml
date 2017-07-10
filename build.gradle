@@ -20,13 +20,13 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "3.0.1"
+version "3.1.2"
 group "org.grails.plugins"
 
 apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: "spring-boot"
+apply plugin: "org.springframework.boot"
 apply plugin: "org.grails.grails-plugin"
 apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
