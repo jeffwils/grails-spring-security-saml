@@ -336,7 +336,7 @@ grails.plugin.springsecurity.saml.metadata.sp.defaults.requireLogoutRequestSigne
 grails.plugin.springsecurity.saml.metadata.sp.defaults.requireLogoutResponseSigned = false;
 grails.plugin.springsecurity.saml.keyManager.storeFile = "classpath:security/keystore.jks"
 grails.plugin.springsecurity.saml.keyManager.storePass = 'nalle123'
-grails.plugin.springsecurity.saml.keyManager.passwords = [ping:'ping123']
+grails.plugin.springsecurity.saml.keyManager.passwords = ping:'ping123'
 grails.plugin.springsecurity.saml.keyManager.defaultKey = 'ping'
 ```
 
@@ -410,7 +410,7 @@ grails:
             keyManager:
                storeFile: "classpath:security/keystore.jks"
                storePass: 'nalle123'
-               passwords: [ping:'ping123']
+               passwords: ping:'ping123'
                defaultKey: 'ping'
 ```
 
