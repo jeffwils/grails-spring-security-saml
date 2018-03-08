@@ -5,6 +5,7 @@ This plugin provides SAML 2.0 support for Grails 3 applications.  It was origina
 ### Plugin Compatibility with Grails
 Grails 3.0.x - Use Version 3.0.x of the plugin
 Grails 3.1.x - Use Version 3.1.x of the plugin
+Grails 3.3.x - Use Version 3.3.x of the plugin
 
 ### Installation
 **Maven**
@@ -13,7 +14,7 @@ Grails 3.1.x - Use Version 3.1.x of the plugin
 <dependency>
   <groupId>org.grails.plugins</groupId>
   <artifactId>spring-security-saml</artifactId>
-  <version>3.0.0</version>
+  <version>3.3.0</version>
   <type>pom</type>
 </dependency>
 ```
@@ -21,7 +22,7 @@ Grails 3.1.x - Use Version 3.1.x of the plugin
 **Gradle**
 
 ```gradle
-compile 'org.grails.plugins:spring-security-saml:3.0.0'
+compile 'org.grails.plugins:spring-security-saml:3.3.0'
 ```
 
 NOTE: you may have to add the following repositories
@@ -74,8 +75,8 @@ All of these properties can be put in either application.yml or application.groo
 **grails.plugins.springsecurity.saml**
 
 
-| Property | Syntax | Example Value | Description | 
-|--------|------|-------------|-----------| 
+| Property | Syntax | Example Value | Description |
+|--------|------|-------------|-----------|
 | active | boolean | true | States whether or not SAML is active |
 | afterLoginUrl | url string | '/' | Redirection Url in your application upon successful login from the IDP |
 | afterLogoutUrl | url string | '/' | Redirection Url in your application upon successful logout from the IDP |
@@ -277,7 +278,7 @@ assets {
 }
 ```
 
-application.groovy 
+application.groovy
 
 ```
 // Added by the Spring Security Core plugin:
@@ -413,4 +414,3 @@ grails:
                passwords: ping:'ping123'
                defaultKey: 'ping'
 ```
-

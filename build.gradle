@@ -20,10 +20,10 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "3.1.0"
+version "3.3.0"
 group "org.grails.plugins"
 
-apply plugin: 'maven-publish'
+//apply plugin: 'maven-publish'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: "spring-boot"
@@ -32,8 +32,9 @@ apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "com.jfrog.bintray"
 apply plugin: "io.spring.dependency-management"
+apply plugin: "org.grails.grails-plugin-publish"
 // Used for publishing to central repository, remove if not needed
-apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
+//apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
 bintray {
@@ -94,6 +95,8 @@ dependencyManagement {
 }
 
 dependencies {
+    compile "org.grails:grails-core"
+
     provided 'org.springframework.boot:spring-boot-starter-logging'
     provided "org.springframework.boot:spring-boot-starter-actuator"
     provided "org.springframework.boot:spring-boot-autoconfigure"
@@ -108,7 +111,7 @@ dependencies {
 
     console "org.grails:grails-console"
 
-    compile 'org.grails.plugins:spring-security-core:3.1.1'
+    compile 'org.grails.plugins:spring-security-core:3.2.0.M1'
 
     compile("commons-httpclient:commons-httpclient:3.1") {
         exclude module: ['commons-codec', 'commons-logging', 'junit']

@@ -47,4 +47,8 @@ class SamlSecurityService extends SpringSecurityService {
             }
         } else { return null}
     }
+
+    reactor.bus.Bus sendAndReceive(java.lang.Object obj, groovy.lang.Closure closure) {
+        return null
+    }
 }
