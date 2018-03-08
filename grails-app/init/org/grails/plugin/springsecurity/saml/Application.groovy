@@ -9,6 +9,10 @@ import static grails.util.Metadata.getCurrent
 
 import static grails.util.Metadata.current as metaInfo
 
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.springframework.boot.autoconfigure.security.SecurityFilterAutoConfiguration
+
+@EnableAutoConfiguration(exclude = [SecurityFilterAutoConfiguration])
 class Application extends GrailsAutoConfiguration {
     static void main(String[] args) {
 
