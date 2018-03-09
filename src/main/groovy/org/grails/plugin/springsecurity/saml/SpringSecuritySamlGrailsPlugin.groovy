@@ -46,7 +46,7 @@ import org.apache.commons.httpclient.HttpClient
 class SpringSecuritySamlGrailsPlugin extends Plugin {
 
     // the version or versions of Grails the plugin is designed for
-    String grailsVersion = '3.0.0 > *'
+    String grailsVersion = '3.3.0 > *'
     String author = 'Jeff Wilson'
     String authorEmail = 'jeffwilson70@gmail.com'
     String title = 'Spring Security Saml2 Plugin'
@@ -59,7 +59,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     def scm = [url: 'https://github.com/jeffwils/grails-spring-security-saml']
     def profiles = ['web']
 
-    def dependsOn = ['springSecurityCore' : '3.1.1 > *']
+    def dependsOn = ['springSecurityCore' : '3.2.0 > *']
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
             'grails-app/domain/**',
@@ -95,7 +95,6 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             context.'component-scan'('base-package': "org.springframework.security.saml")
 
             SpringSecurityUtils.registerProvider 'samlAuthenticationProvider'
-            SpringSecurityUtils.registerLogoutHandler 'successLogoutHandler'
             SpringSecurityUtils.registerLogoutHandler 'logoutHandler'
             SpringSecurityUtils.registerFilter 'samlEntryPoint', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 1
             SpringSecurityUtils.registerFilter 'metadataFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 2
@@ -108,7 +107,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 defaultTargetUrl = conf.saml.afterLoginUrl
             }
 
-            successLogoutHandler(SimpleUrlLogoutSuccessHandler) {
+            logoutSuccessHandler(SimpleUrlLogoutSuccessHandler) {
                 defaultTargetUrl = conf.saml.afterLogoutUrl
             }
 
@@ -312,10 +311,10 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             }
 
             samlLogoutFilter(SAMLLogoutFilter,
-                    ref('successLogoutHandler'), ref('logoutHandler'), ref('logoutHandler'))
+                    ref('logoutSuccessHandler'), ref('logoutHandler'), ref('logoutHandler'))
 
             samlLogoutProcessingFilter(SAMLLogoutProcessingFilter,
-                    ref('successLogoutHandler'), ref('logoutHandler'))
+                    ref('logoutSuccessHandler'), ref('logoutHandler'))
 
             webSSOprofileConsumer(WebSSOProfileConsumerImpl){
                 responseSkew = conf.saml.responseSkew
