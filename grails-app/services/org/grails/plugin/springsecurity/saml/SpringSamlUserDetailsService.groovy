@@ -152,10 +152,10 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
             log.debug("UserClassName ${userDomainClassName}")
             Class<?> UserClass = grailsApplication.getClassForName(userDomainClassName)
             log.debug("Artefact ${grailsApplication.getClassForName(userDomainClassName)}")
-            println("Config ${grailsApplication.config.toString()}")
+            log.debug("Config ${grailsApplication.config.toString()}")
 
                     //getClassForName(userDomainClassName)?.clazz
-            println("UserClass ${UserClass}")
+            log.debug("UserClass ${UserClass}")
             if (UserClass) {
                 def user = BeanUtils.instantiateClass(UserClass)
                 user.username = username
