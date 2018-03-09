@@ -7,6 +7,10 @@
 <body>
 <div style="margin-left: 20px;">
 
+    <g:if test="${flash.message}">
+        <div class="message" role="status">${flash.message}</div>
+    </g:if>
+    
     <h1>Login/Logout</h1>
     <sec:ifLoggedIn>
         Welcome back, <sec:username/> | <sec:logoutLink local="true">Local logout</sec:logoutLink> | <sec:logoutLink>Global logout</sec:logoutLink>

@@ -35,6 +35,10 @@ class MetadataController {
     def show = {
         println "in show: ${params.entityId}"
         def entityDescriptor = metadata.getEntityDescriptor(params.entityId)
+        if(!entityDescriptor) {
+            notFound()
+            return
+        }
         def extendedMetadata = metadata.getExtendedMetadata(params.entityId)
         def storagePath = getFileName(entityDescriptor)
         def serializedMetadata = getMetadataAsString(entityDescriptor)
@@ -61,14 +65,9 @@ class MetadataController {
         println "in save: ${params.entityId}"
 
         metadataGenerator.setEntityId(params.entityId)
-        metadataGenerator.setEntityAlias(params.alias)
         metadataGenerator.setEntityBaseURL(params.baseURL)
-        metadataGenerator.setSignMetadata(params.signMetadata as boolean)
         metadataGenerator.setRequestSigned(params.requestSigned as boolean)
         metadataGenerator.setWantAssertionSigned(params.wantAssertionSigned as boolean)
-        metadataGenerator.setSigningKey(params.signingKey)
-        metadataGenerator.setEncryptionKey(params.encryptionKey)
-        metadataGenerator.setTlsKey(params.tlsKey)
 
         def bindingsSSO = []
 
@@ -89,11 +88,16 @@ class MetadataController {
 
         metadataGenerator.setBindingsSSO((Collection<String>) bindingsSSO)
 
-        metadataGenerator.setIncludeDiscovery(params.includeDiscovery as boolean)
+        metadataGenerator.setIncludeDiscoveryExtension(params.includeDiscovery as boolean)
 
         def descriptor = metadataGenerator.generateMetadata()
 
         ExtendedMetadata extendedMetadata = metadataGenerator.generateExtendedMetadata()
+        extendedMetadata.setAlias(params.alias)
+        extendedMetadata.setSignMetadata(params.signMetadata as boolean)
+        extendedMetadata.setSigningKey(params.signingKey)
+        extendedMetadata.setEncryptionKey(params.encryptionKey)
+        extendedMetadata.setTlsKey(params.tlsKey)
         extendedMetadata.setSecurityProfile(params.securityProfile)
         extendedMetadata.setRequireLogoutRequestSigned(params.requireLogoutRequestSigned as boolean)
         extendedMetadata.setRequireLogoutResponseSigned(params.requireLogoutResponseSigned as boolean)
@@ -148,5 +152,10 @@ class MetadataController {
             }
         }
         availableKeys
+    }
+
+    protected void notFound() {
+        flash.message = message(code: 'default.not.found.message', args: ["entityId", params.entityId])
+        redirect action: "index", method: "GET"
     }
 }
