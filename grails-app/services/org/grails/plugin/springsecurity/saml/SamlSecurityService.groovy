@@ -1,6 +1,7 @@
 package org.grails.plugin.springsecurity.saml
 
 import grails.plugin.springsecurity.SpringSecurityService
+import groovy.util.logging.Slf4j
 
 /**
  * A subclass of {@link SpringSecurityService} to replace {@link getCurrentUser()}
@@ -9,6 +10,7 @@ import grails.plugin.springsecurity.SpringSecurityService
  *
  * @author alvaro.sanchez
  */
+@Slf4j('logger')
 class SamlSecurityService extends SpringSecurityService {
     SpringSamlUserDetailsService userDetailsService
     def userCache
@@ -24,7 +26,7 @@ class SamlSecurityService extends SpringSecurityService {
     }
 
     Object getCurrentUser() {
-        log.debug("SamlSecurityService getCurrentUser")
+        logger.debug("SamlSecurityService getCurrentUser")
         def userDetails
         if (!isLoggedIn()) {
             userDetails = null
