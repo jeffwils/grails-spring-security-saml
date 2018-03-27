@@ -20,7 +20,7 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "3.3.0"
+version "3.3.1-SNAPSHOT"
 group "org.grails.plugins"
 
 //apply plugin: 'maven-publish'
@@ -153,4 +153,8 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     gradleVersion = gradleWrapperVersion
+}
+
+jar {
+    exclude 'test/**'
 }
