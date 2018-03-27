@@ -1,19 +1,14 @@
 package org.grails.plugin.springsecurity.saml
 
-import grails.test.mixin.*
 import grails.plugin.springsecurity.userdetails.GrailsUser
 import grails.testing.gorm.DataTest
 import grails.testing.services.ServiceUnitTest
-import groovy.util.logging.Slf4j
-import org.junit.Before
-import org.junit.Test
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.context.SecurityContextImpl
 import spock.lang.Specification
 import test.TestSamlUser
 
-@Slf4j
 class SamlSecurityServiceSpec extends Specification implements ServiceUnitTest<SamlSecurityService>, DataTest {
 
     def grailsUser, authToken

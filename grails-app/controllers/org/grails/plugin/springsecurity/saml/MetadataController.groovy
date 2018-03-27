@@ -25,15 +25,15 @@ class MetadataController {
     def keyManager
 
     def index = {
-        println "in index"
+        log.trace 'in index'
         metadata.SPEntityNames.each{
-            println "${it}"
+            log.trace "${it}"
         }
         [hostedSP: metadata.hostedSPName, spList: metadata.SPEntityNames, idpList: metadata.IDPEntityNames]
     }
 
     def show = {
-        println "in show: ${params.entityId}"
+        log.trace "in show: ${params.entityId}"
         def entityDescriptor = metadata.getEntityDescriptor(params.entityId)
         if(!entityDescriptor) {
             notFound()
@@ -51,7 +51,7 @@ class MetadataController {
         def availableKeys = getAvailablePrivateKeys()
         def baseUrl = "${request.scheme}://${request.serverName}:${request.serverPort}${request.contextPath}"
 
-        println "In Create Server name ${request.serverName} used as entity id and alias - baseUrl ${baseUrl}"
+        log.trace "In Create Server name ${request.serverName} used as entity id and alias - baseUrl ${baseUrl}"
         def entityId = request.serverName
         def alias = entityId
 
@@ -62,7 +62,7 @@ class MetadataController {
 
     def save = {
 
-        println "in save: ${params.entityId}"
+        log.trace "in save: ${params.entityId}"
 
         metadataGenerator.setEntityId(params.entityId)
         metadataGenerator.setEntityBaseURL(params.baseURL)
