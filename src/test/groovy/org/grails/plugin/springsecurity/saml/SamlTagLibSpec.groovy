@@ -1,12 +1,13 @@
 package org.grails.plugin.springsecurity.saml
 
 import grails.test.mixin.*
+import grails.testing.web.taglib.TagLibUnitTest
 import grails.util.Holders
 import org.junit.Test
 import org.junit.Ignore
+import spock.lang.Specification
 
-@TestFor(SamlTagLib)
-class SamlTagLibSpec {
+class SamlTagLibSpec extends Specification implements TagLibUnitTest<SamlTagLib> {
 
     @Test
     @Ignore("currently has a bug and requires rework (no yak shave)")

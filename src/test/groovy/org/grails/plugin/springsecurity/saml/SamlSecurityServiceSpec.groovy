@@ -2,24 +2,23 @@ package org.grails.plugin.springsecurity.saml
 
 import grails.test.mixin.*
 import grails.plugin.springsecurity.userdetails.GrailsUser
+import grails.testing.gorm.DataTest
+import grails.testing.services.ServiceUnitTest
 import org.junit.Before
 import org.junit.Test
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.context.SecurityContextImpl
-
+import spock.lang.Specification
 import test.TestSamlUser
 
-@TestFor(SamlSecurityService)
-@Mock(TestSamlUser)
-class SamlSecurityServiceSpec {
+class SamlSecurityServiceSpec extends Specification implements ServiceUnitTest<SamlSecurityService>, DataTest {
 
     def grailsUser, authToken
-    def service
 
     @Before
-    public void init() {
-        service = new SamlSecurityService()
+    void init() {
+        mockDomain( TestSamlUser )
         grailsUser = new GrailsUser('username', 'password', true, true, true, true, [], 1)
 
         authToken = new UsernamePasswordAuthenticationToken(grailsUser.username, null)

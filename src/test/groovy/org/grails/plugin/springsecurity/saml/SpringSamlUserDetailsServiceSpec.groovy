@@ -1,8 +1,8 @@
 package org.grails.plugin.springsecurity.saml
 
-import grails.test.mixin.Mock
-import grails.test.mixin.TestFor
 import grails.plugin.springsecurity.userdetails.GrailsUser
+import grails.testing.gorm.DataTest
+import grails.testing.services.ServiceUnitTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -10,25 +10,23 @@ import org.opensaml.saml2.core.impl.AssertionImpl
 import org.opensaml.saml2.core.impl.NameIDImpl
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.saml.SAMLCredential
+import spock.lang.Specification
 import test.TestRole
 import test.TestSamlUser
 import test.TestUserRole
 
 import static UnitTestUtils.*
 
-@TestFor(SpringSamlUserDetailsService)
-@Mock([TestSamlUser, TestRole, TestUserRole])
-class SpringSamlUserDetailsServiceSpec {
+class SpringSamlUserDetailsServiceSpec  extends Specification implements ServiceUnitTest<SpringSamlUserDetailsService>, DataTest {
     def credential, nameID, assertion, mockGrailsAplication, testRole, testRole2
-    def service
 
     String username = "jackSparrow"
     Map detailsServiceSettings = [:]
     //DefaultGrailsApplication grailsApplication
 
     @Before
-    public void init() {
-        service = new SpringSamlUserDetailsService()
+    void init() {
+        mockDomains( TestSamlUser, TestRole, TestUserRole )
         mockOutDefaultGrailsApplication()
         //grailsApplication = new DefaultGrailsApplication()
 

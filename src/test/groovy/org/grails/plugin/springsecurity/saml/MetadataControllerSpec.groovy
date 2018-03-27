@@ -1,11 +1,11 @@
 package org.grails.plugin.springsecurity.saml
 
 import grails.test.mixin.*
+import grails.testing.web.controllers.ControllerUnitTest
 import org.junit.*
+import spock.lang.Specification
 
-@TestFor(MetadataController)
-@Mock(MetadataController)
-class MetadataControllerSpec {
+class MetadataControllerSpec extends Specification implements ControllerUnitTest<MetadataController> {
 
     def metadata
 
