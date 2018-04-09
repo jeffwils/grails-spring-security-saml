@@ -62,7 +62,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     def dependsOn = ['springSecurityCore' : '3.2.0 > *']
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-            'grails-app/domain/**',
+            'test/**',
             "grails-app/views/error.gsp",
             'docs/**',
             'scripts/PublishGithub.groovy'
