@@ -122,10 +122,13 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
+        logger.debug( 'Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
         String[] samlGroups = credential.getAttributeAsStringArray(samlUserGroupAttribute)
+        logger.debug( 'Using samlGroups: ' + samlGroups )
+        logger.debug( 'User samlUserGroupToRoleMapping: ' + samlUserGroupToRoleMapping )
 
         samlGroups.eachWithIndex { groupName, groupIdx ->
-            logger.debug("Group Name From Saml ${groupName}")
+            logger.debug("Group Name From SAML: ${groupName}")
             def role = samlUserGroupToRoleMapping?.find{ it?.value == groupName }?.key
             def authority
             if (role){

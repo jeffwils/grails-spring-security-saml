@@ -39,7 +39,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
         service.samlAutoCreateKey = null
         service.samlUserAttributeMappings = [username: USERNAME_ATTR_NAME]
         service.samlUserGroupAttribute = GROUP_ATTR_NAME
-        service.samlUserGroupToRoleMapping = ['myGroup': ROLE]
+        service.samlUserGroupToRoleMapping = ["$ROLE": 'myGroup']
         service.userDomainClassName = USER_CLASS_NAME
         service.grailsApplication = grailsApplication
 
@@ -107,7 +107,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
         given:
             testRole.save( failOnError: true )
             setMockSamlAttributes(credential,
-                    ["$GROUP_ATTR_NAME": "something=something,CN=myGroup",
+                    ["$GROUP_ATTR_NAME": "myGroup",
                      "$USERNAME_ATTR_NAME": 'myUsername'])
             def user = service.loadUserBySAML(credential)
 
