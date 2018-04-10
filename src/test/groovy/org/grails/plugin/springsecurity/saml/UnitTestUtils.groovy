@@ -97,5 +97,9 @@ class UnitTestUtils {
 
             return []
         }
+
+        credential.metaClass.getAttributeAsString = { String name ->
+            getAttributeByName( name ).attributeValues[0].value
+        }
     }
 }

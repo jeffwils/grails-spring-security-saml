@@ -1,8 +1,3 @@
-package org.grails.plugin.springsecurity.saml
-
-import grails.converters.JSON
-import grails.plugin.springsecurity.SpringSecurityUtils
-
 /* Copyright 2006-2010 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +12,18 @@ import grails.plugin.springsecurity.SpringSecurityUtils
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.grails.plugin.springsecurity.saml
+
+import grails.gorm.transactions.Transactional
+
 import grails.plugin.springsecurity.userdetails.GormUserDetailsService
-import grails.transaction.Transactional
-import grails.util.Holders
 import groovy.util.logging.Slf4j
-import org.opensaml.saml2.core.Attribute
 import org.springframework.beans.BeanUtils
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.saml.SAMLCredential
 import org.springframework.security.saml.userdetails.SAMLUserDetailsService
-import org.springframework.dao.DataAccessException
-import grails.core.GrailsApplication
 
 /**
  * A {@link GormUserDetailsService} extension to read attributes from a LDAP-backed
@@ -103,10 +97,11 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     }
 
     protected String getSamlUsername(credential) {
-        logger.debug("getSamlUsername")
-        if (samlUserAttributeMappings?.username) {
-            def value = credential.getAttributeAsString(samlUserAttributeMappings.username)
-            logger.debug("Username getSamlUsername ${value}")
+        logger.debug("getSamlUsername()")
+        def usernameAttr = samlUserAttributeMappings?.username
+        if ( usernameAttr ) {
+            def value = credential.getAttributeAsString(usernameAttr)
+            logger.debug("Username using attribute '${usernameAttr}': ${value}")
             return value
         } else {
             // if no mapping provided for username attribute then assume it is the returned subject in the assertion
