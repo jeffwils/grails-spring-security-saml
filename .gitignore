@@ -64,7 +64,6 @@ $RECYCLE.BIN/
 
 ### Gradle ###
 .gradle
-gradle.properties
 build/
 
 # Ignore Gradle GUI config
@@ -118,9 +117,6 @@ gradle-app.setting
 *.war
 *.ear
 
-!gradle/wrapper/gradle-wrapper.jar
-!grails-wrapper.jar
-
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
@@ -134,3 +130,7 @@ pom.xml.next
 release.properties
 
 .asscache
+
+### Exceptions ###
+!gradle/wrapper/gradle-wrapper.jar
+!grails-wrapper.jar
