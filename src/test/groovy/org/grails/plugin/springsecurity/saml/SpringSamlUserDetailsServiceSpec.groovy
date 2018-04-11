@@ -4,6 +4,7 @@ import grails.plugin.springsecurity.userdetails.GrailsUser
 import grails.testing.gorm.DataTest
 import grails.testing.services.ServiceUnitTest
 import org.opensaml.saml2.core.NameID
+import org.opensaml.saml2.core.Assertion
 import org.opensaml.saml2.core.impl.AssertionImpl
 import org.opensaml.saml2.core.impl.NameIDImpl
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -19,16 +20,14 @@ import static UnitTestUtils.*
 class SpringSamlUserDetailsServiceSpec  extends Specification implements ServiceUnitTest<SpringSamlUserDetailsService>, DataTest {
     SAMLCredential credential
     NameID nameID
-    def assertion, mockGrailsAplication, testRole, testRole2
+    Assertion assertion
+    TestRole testRole, testRole2
 
     String username = "jackSparrow"
-    Map detailsServiceSettings = [:]
-    //DefaultGrailsApplication grailsApplication
 
     void setup() {
         mockDomains( TestSamlUser, TestRole, TestUserRole )
         mockOutDefaultGrailsApplication()
-        //grailsApplication = new DefaultGrailsApplication()
 
         mockOutSpringSecurityUtilsConfig()
         mockWithTransaction()

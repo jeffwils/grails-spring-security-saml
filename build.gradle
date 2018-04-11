@@ -95,8 +95,8 @@ dependencyManagement {
 }
 
 dependencies {
-    compile "org.grails:grails-core"
-    compile 'org.grails:grails-logging'
+    provided "org.grails:grails-core"
+    provided 'org.grails:grails-logging'
 
     provided 'org.springframework.boot:spring-boot-starter-logging'
     provided "org.springframework.boot:spring-boot-starter-actuator"
