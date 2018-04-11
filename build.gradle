@@ -112,6 +112,11 @@ dependencies {
     testCompile 'org.grails:grails-plugin-testing'
     testCompile 'org.grails:grails-web-testing-support'
 
+    integrationTestCompile 'org.grails.plugins:hibernate5'
+    integrationTestCompile 'org.hibernate:hibernate-core:5.1.5.Final'
+
+    integrationTestRuntime 'com.h2database:h2'
+    integrationTestRuntime 'com.zaxxer:HikariCP:2.7.4'
 
     console "org.grails:grails-console"
 
@@ -150,8 +155,6 @@ dependencies {
 
 
     compile "org.jdom:jdom-legacy:1.1.3"
-
-
 }
 
 
