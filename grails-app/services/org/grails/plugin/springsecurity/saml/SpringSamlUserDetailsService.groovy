@@ -221,15 +221,14 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                         joinClass.withTransaction {
                             if (!joinClass.exists(user.id, role.id)){
                                 joinClass.create(user, role, true)
+                                logger.debug 'Allocated new role to user.'
                             }
-
+                            else {
+                                logger.debug 'User and role already exists, nothing created.'
+                            }
                         }
-
                     }
-
                 }
-
-
         }
         return user
     }

@@ -14,6 +14,7 @@
  */
 package test
 
+import grails.gorm.DetachedCriteria
 import org.apache.commons.lang.builder.HashCodeBuilder
 
 
@@ -38,9 +39,19 @@ class TestUserRole implements Serializable {
         builder.toHashCode()
     }
 
-    static TestUserRole get(long userId, long roleId) {
-        find 'from TestUserRole where user.id=:userId and role.id=:roleId',
-                [userId: userId, roleId: roleId]
+    static TestUserRole get(long userAcctId, long roleId) {
+        criteriaFor(userAcctId, roleId).get()
+    }
+
+    static boolean exists(long userAcctId, long roleId) {
+        criteriaFor(userAcctId, roleId).count()
+    }
+
+    private static DetachedCriteria criteriaFor(long userAcctId, long roleId) {
+        TestUserRole.where {
+            user == TestSamlUser.load(userAcctId) &&
+            role == TestRole.load(roleId)
+        }
     }
 
     static TestUserRole create(TestSamlUser user, TestRole role, boolean flush = false) {
