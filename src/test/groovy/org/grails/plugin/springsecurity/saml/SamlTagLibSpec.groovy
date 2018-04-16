@@ -1,98 +1,105 @@
 package org.grails.plugin.springsecurity.saml
 
-import grails.test.mixin.*
+import grails.testing.web.taglib.TagLibUnitTest
 import grails.util.Holders
-import org.junit.Test
-import org.junit.Ignore
+import spock.lang.Ignore
+import spock.lang.Specification
 
-@TestFor(SamlTagLib)
-class SamlTagLibSpec {
+class SamlTagLibSpec extends Specification implements TagLibUnitTest<SamlTagLib> {
+    // Uses the default as specified in conf/plugin.yml
+    private static final IDP_PARAM = 'idp=security/idp-local.xml'
 
-    @Test
+    // Curious this, as although the ignore says there's a bug, the 'loginLinkShouldSetBody' test looks to be doing
+    // same test but with different expected outcome. Can this just be removed? (Leaving ignore for now.)
     @Ignore("currently has a bug and requires rework (no yak shave)")
     void loginLinkRendersCorrectUrl() {
-        def expectedLink = '<a href=\'/saml/login\'>login</a>'
-        assert applyTemplate('<sec:loginLink>Logout</sec:loginLink>') == expectedLink
+        expect:
+            applyTemplate('<sec:loginLink>Login</sec:loginLink>') == '<a href=\'/saml/login\'>Login</a>'
     }
 
-    @Test
     void loginLinkShouldSetBody() {
-        def body = "Login here"
+        given:
+            def body = "Login here"
 
-        def expectedLink = "<a href=\'[:]?idp=null\'>${body}</a>"
-        assert applyTemplate("<sec:loginLink>${body}</sec:loginLink>") == expectedLink
+        expect:
+            applyTemplate("<sec:loginLink>${body}</sec:loginLink>") ==
+                    "<a href=\'[:]?${IDP_PARAM}\'>${body}</a>"
     }
 
-    @Test
     void loginLinkShouldSetClassAttribute() {
-        def expectedClass = 'loginBtn link'
-        def expectedLink = "<a href=\'[:]?idp=null\' class=\'$expectedClass\'>Login</a>"
-        assert applyTemplate("<sec:loginLink class=\'${expectedClass}\'>Login</sec:loginLink>") == expectedLink
+        expect:
+            def expectedClass = 'loginBtn link'
+            def expectedLink = "<a href=\'[:]?${IDP_PARAM}\' class=\'$expectedClass\'>Login</a>"
+            applyTemplate("<sec:loginLink class=\'${expectedClass}\'>Login</sec:loginLink>") == expectedLink
     }
 
-    @Test
     void loginLinkShouldSetIdAttribute() {
-        def expectedId = 'loginBtn'
-
-        def expectedLink = "<a href=\'[:]?idp=null\' id=\'$expectedId\'>Login</a>"
-        assert applyTemplate("<sec:loginLink id=\'${expectedId}\'>Login</sec:loginLink>") == expectedLink
+        expect:
+            def expectedId = 'loginBtn'
+            def expectedLink = "<a href=\'[:]?${IDP_PARAM}\' id=\'$expectedId\'>Login</a>"
+            applyTemplate("<sec:loginLink id=\'${expectedId}\'>Login</sec:loginLink>") == expectedLink
     }
 
-    @Test
     void logoutLinkShouldRenderCorrectUrl() {
-        mockConfig()
+        given:
+            mockConfig()
+            def expectedLink = '<a href=\'/saml/logout\'>Logout</a>'
 
-        def expectedLink = '<a href=\'/saml/logout\'>Logout</a>'
-        assert applyTemplate('<sec:logoutLink>Logout</sec:logoutLink>') == expectedLink
+        expect:
+            applyTemplate('<sec:logoutLink>Logout</sec:logoutLink>') == expectedLink
     }
 
-    @Test
-    void logouLinkShouldDefaultToCoreLogoutUrl() {
-        mockConfig(false)
+    void logoutLinkShouldDefaultToCoreLogoutUrl() {
+        given:
+            mockConfig(false)
+            def expectedLink = "<a href=\'${SamlTagLib.LOGOUT_SLUG}\'>Logout</a>"
 
-        def expectedLink = "<a href=\'${SamlTagLib.LOGOUT_SLUG}\'>Logout</a>"
-        assert applyTemplate('<sec:logoutLink>Logout</sec:logoutLink>') == expectedLink
+        expect:
+            applyTemplate('<sec:logoutLink>Logout</sec:logoutLink>') == expectedLink
     }
 
-    @Test
     void logouLinkShouldDefaultToCoreLogoutUrlWithLocal() {
-        mockConfig(false)
+        given:
+            mockConfig(false)
+            def expectedLink = "<a href=\'${SamlTagLib.LOGOUT_SLUG}?local=true\'>Logout</a>"
 
-        def expectedLink = "<a href=\'${SamlTagLib.LOGOUT_SLUG}?local=true\'>Logout</a>"
-        assert applyTemplate('<sec:logoutLink local="true">Logout</sec:logoutLink>') == expectedLink
+        expect:
+            applyTemplate('<sec:logoutLink local="true">Logout</sec:logoutLink>') == expectedLink
     }
 
 
-    @Test
     void logoutLinkShouldSetBody() {
-        mockConfig()
-        def body = "Logout here"
+        given:
+            mockConfig()
+            def body = "Logout here"
+            def expectedLink = "<a href=\'/saml/logout\'>${body}</a>"
 
-        def expectedLink = "<a href=\'/saml/logout\'>${body}</a>"
-        assert applyTemplate("<sec:logoutLink>${body}</sec:logoutLink>") == expectedLink
+        expect:
+            applyTemplate("<sec:logoutLink>${body}</sec:logoutLink>") == expectedLink
     }
 
-    @Test
     void logoutLinkShouldSetClassAttribute() {
-        mockConfig()
-        def expectedClass = 'logoutBtn link'
+        given:
+            mockConfig()
+            def expectedClass = 'logoutBtn link'
+            def expectedLink = "<a href=\'/saml/logout\' class=\'$expectedClass\'>Logout</a>"
 
-        def expectedLink = "<a href=\'/saml/logout\' class=\'$expectedClass\'>Logout</a>"
-        assert applyTemplate("<sec:logoutLink class=\'${expectedClass}\'>Logout</sec:logoutLink>") == expectedLink
+        expect:
+            applyTemplate("<sec:logoutLink class=\'${expectedClass}\'>Logout</sec:logoutLink>") == expectedLink
     }
 
-    @Test
     void logoutLinkShouldSetIdAttribute() {
-        mockConfig()
-        def expectedId = 'logoutBtn'
+        given:
+            mockConfig()
+            def expectedId = 'logoutBtn'
+            def expectedLink = "<a href=\'/saml/logout\' id=\'$expectedId\'>Logout</a>"
 
-        def expectedLink = "<a href=\'/saml/logout\' id=\'$expectedId\'>Logout</a>"
-        assert applyTemplate("<sec:logoutLink id=\'${expectedId}\'>Logout</sec:logoutLink>") == expectedLink
+        expect:
+            applyTemplate("<sec:logoutLink id=\'${expectedId}\'>Logout</sec:logoutLink>") == expectedLink
     }
 
     private void mockConfig(boolean samlActive=true) {
         Holders.grailsApplication.config.grails.plugin.springsecurity.saml.active = samlActive
         Holders.grailsApplication.config.grails.plugin.springsecurity.auth.loginFormUrl = [:]
-
     }
 }
