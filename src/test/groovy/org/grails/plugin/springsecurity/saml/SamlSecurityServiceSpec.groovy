@@ -25,7 +25,7 @@ class SamlSecurityServiceSpec extends Specification implements ServiceUnitTest<S
         SecurityContextImpl.metaClass.getAuthentication = { -> authToken }
 
         def samlUser = new TestSamlUser(username: grailsUser.username, password: 'password')
-        assert samlUser.save()
+        samlUser.save( failOnError: true )
 
     }
 
@@ -39,8 +39,8 @@ class SamlSecurityServiceSpec extends Specification implements ServiceUnitTest<S
             def user = service.getCurrentUser()
 
         then:
-            assert user instanceof GrailsUser
-            assert user.username == grailsUser.username
+            user instanceof GrailsUser
+            user.username == grailsUser.username
     }
 
     void "getCurrentUser should return user from the database when autocreate active flag is true"() {

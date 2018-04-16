@@ -163,7 +163,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             service.samlAutoCreateKey = 'username'
 
             def user = new TestSamlUser(username: username, password: 'test')
-            assert user.save()
+            user.save( failOnError: true )
 
             TestUserRole.metaClass.'static'.removeAll = { TestSamlUser userWithRoles -> }
 
@@ -288,7 +288,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             testRole.save( failOnError: true )
             testRole2.save( failOnError: true )
             def user = new TestSamlUser(username: username, password: 'test')
-            assert user.save( failOnError: true )
+            user.save( failOnError: true )
 
             TestUserRole.create(user,testRole2)
 
@@ -353,7 +353,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             TestUserRole.metaClass.'static'.removeAll = {TestSamlUser samlUser -> }
 
             def user = new TestSamlUser(username: username, password: 'test', email: intialEmail)
-            assert user.save( failOnError: true )
+            user.save( failOnError: true )
 
         when:
             service.loadUserBySAML(credential)
