@@ -129,7 +129,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 includeScoping = false
             }
 
-            metadataFilter(MetadataDisplayFilter) {
+            metadataFilter(MetadataDisplayFilterUTF8) {
                 filterProcessesUrl = conf.saml.metadata.url 						// '/saml/metadata'
             }
 
