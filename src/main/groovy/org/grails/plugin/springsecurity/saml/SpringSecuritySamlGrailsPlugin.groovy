@@ -40,6 +40,7 @@ import org.springframework.security.saml.key.JKSKeyManager
 import org.springframework.security.saml.util.VelocityFactory
 import org.springframework.security.saml.context.SAMLContextProviderImpl
 import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider
+import org.opensaml.saml2.metadata.provider.HTTPMetadataProvider
 import org.opensaml.xml.parse.BasicParserPool
 import org.apache.commons.httpclient.HttpClient
 
@@ -143,43 +144,52 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 println "Registering metadata key: ${k} and value: $v"
                 "${providerBeanName}"(ExtendedMetadataDelegate) { extMetaDataDelegateBean ->
 
-                        metadataTrustCheck = false
-                        metadataRequireSignature = false
+                    metadataTrustCheck = false
+                    metadataRequireSignature = false
 
-                    filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
-                        if (v.startsWith("/") || v.indexOf(':') == 1) {
-                            File resource = new File(v)
-                            bean.constructorArgs = [resource]
-                        }else{
-                            def resource = new ClassPathResource(v)
-                            try{
-                                bean.constructorArgs = [resource.getFile()]
-                            }catch (FileNotFoundException fe){
-                                final InputStream is = resource.getInputStream();
+                    if(v.startsWith("https:") || v.startsWith("http:")) {
+                        def timeout = conf.saml.metadata.timeout
+                        def url = v
+                        httpMetadataProvider(HTTPMetadataProvider, url, timeout) { bean ->
+                            parserPool = ref('parserPool')
+                        }
+                        extMetaDataDelegateBean.constructorArgs = [ref('httpMetadataProvider'), new ExtendedMetadata()]
+                    } else {
+                        filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
+                            if (v.startsWith("/") || v.indexOf(':') == 1) {
+                                File resource = new File(v)
+                                bean.constructorArgs = [resource]
+                            } else {
+                                def resource = new ClassPathResource(v)
                                 try {
-                                    final InputStreamReader reader = new InputStreamReader(is);
+                                    bean.constructorArgs = [resource.getFile()]
+                                } catch (FileNotFoundException fe) {
+                                    final InputStream is = resource.getInputStream();
                                     try {
-                                        final Document headerDoc = new SAXBuilder().build(reader);
-                                        XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-                                        String xmlString = outputter.outputString(headerDoc);
-                                        File temp = File.createTempFile("idp-local",".xml");
-                                        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-                                        bw.write(xmlString);
-                                        bw.close();
-                                        bean.constructorArgs = [temp]
-                                        temp.deleteOnExit();
+                                        final InputStreamReader reader = new InputStreamReader(is);
+                                        try {
+                                            final Document headerDoc = new SAXBuilder().build(reader);
+                                            XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+                                            String xmlString = outputter.outputString(headerDoc);
+                                            File temp = File.createTempFile("idp-local",".xml");
+                                            BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+                                            bw.write(xmlString);
+                                            bw.close();
+                                            bean.constructorArgs = [temp]
+                                            temp.deleteOnExit();
+                                        } finally {
+                                            reader.close();
+                                        }
                                     } finally {
-                                        reader.close();
+                                        is.close();
                                     }
-                                } finally {
-                                    is.close();
                                 }
                             }
+                            parserPool = ref('parserPool')
                         }
-                        parserPool = ref('parserPool')
-                    }
 
-                    extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
+                        extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
+                    }
                 }
 
                 providers << ref(providerBeanName)
