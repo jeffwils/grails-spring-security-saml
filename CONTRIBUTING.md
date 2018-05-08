@@ -5,6 +5,22 @@
 We welcome contributions via both the raising of issues and submitting pull requests. But before you
 do, please take a moment to consult the below.
 
+## Chatting
+
+If before any of the below you'd like to discuss an issue or some code, then come and chat with
+us over on Matrix. The room is:
+[#grails-spring-security-saml:matrix.org](https://riot.im/app/#/room/#grails-spring-security-saml:matrix.org).
+
+### New to Matrix?
+
+If matrix is new to you, then start with [Riot](https://about.riot.im/). You'll see it has both a
+[web client](https://riot.im/app) and mobile clients. So maybe jump on into the web client and
+register an account, then join the room.
+
+But rest assured, this is not a platform owned by some commercial entity (e.g. Slack, etc.), it's
+an open, federated and distributed communication network. Read more at
+[Matrix.org](https://matrix.org/).
+
 ## Submitting Issues
 
 When you submit an issue, please take the time to provide as much info as you can. Key bits are:
@@ -14,7 +30,7 @@ When you submit an issue, please take the time to provide as much info as you ca
 3. A concise description of your issue
 4. More details of the issue, including any error logs etc.
 
-Optionally, it's sometimes useful so know details about your IDP - what software or provider, etc.
+Optionally, it's sometimes useful to know details about your IDP - what software or provider, etc.
 
 ## Submitting Code / Pull Requests
 
@@ -26,8 +42,9 @@ E.g:
 
 Or better yet, use your gitflow tooling.
 
-Please ensure you provide quality commit messages, and in the PR please details what testing you
-have undertaken. Also, ideally provide some unit and/or integration tests as part of your PR.
+Please ensure you provide [quality commit messages](https://chris.beams.io/posts/git-commit/),
+and in the PR please detail what testing you have undertaken. Also, ideally provide some unit
+and/or integration tests as part of your PR.
 
 ### Gitflow Setup
 
