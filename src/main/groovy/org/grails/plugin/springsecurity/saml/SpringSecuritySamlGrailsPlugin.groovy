@@ -77,11 +77,16 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     Closure doWithSpring() {
         {->
             def conf = SpringSecurityUtils.securityConfig
-            if (!conf || !conf.active) { return }
+            if( !conf ) {
+                println 'There is no Spring Security config, SAML plugin will not be available.'
 
-//            SpringSecurityUtils.loadSecondaryConfig 'DefaultSamlSecurityConfig'
-//            conf = SpringSecurityUtils.securityConfig
-//            if (!conf.saml.active) { return }
+                return
+            }
+            else if( !conf.saml.active ) {
+                println 'saml.active is not true, SAML plugin will not be available.'
+
+                return
+            }
 
             println 'Configuring Spring Security SAML ...'
 
