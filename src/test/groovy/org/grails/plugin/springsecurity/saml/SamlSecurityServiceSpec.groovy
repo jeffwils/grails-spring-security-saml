@@ -1,25 +1,20 @@
 package org.grails.plugin.springsecurity.saml
 
-import grails.test.mixin.*
 import grails.plugin.springsecurity.userdetails.GrailsUser
-import org.junit.Before
-import org.junit.Test
+import grails.testing.gorm.DataTest
+import grails.testing.services.ServiceUnitTest
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.context.SecurityContextImpl
-
+import spock.lang.Specification
 import test.TestSamlUser
 
-@TestFor(SamlSecurityService)
-@Mock(TestSamlUser)
-class SamlSecurityServiceSpec {
+class SamlSecurityServiceSpec extends Specification implements ServiceUnitTest<SamlSecurityService>, DataTest {
 
     def grailsUser, authToken
-    def service
 
-    @Before
-    public void init() {
-        service = new SamlSecurityService()
+    void setup() {
+        mockDomain( TestSamlUser )
         grailsUser = new GrailsUser('username', 'password', true, true, true, true, [], 1)
 
         authToken = new UsernamePasswordAuthenticationToken(grailsUser.username, null)
@@ -30,51 +25,59 @@ class SamlSecurityServiceSpec {
         SecurityContextImpl.metaClass.getAuthentication = { -> authToken }
 
         def samlUser = new TestSamlUser(username: grailsUser.username, password: 'password')
-        assert samlUser.save()
+        samlUser.save( failOnError: true )
 
     }
 
-    @Test
     void "getCurrentUser should return user from sesion when autocreate active flag is false"() {
-        def fakeConfig = [ saml: [ autoCreate: [ active: false ] ] ]
+        setup:
+            def fakeConfig = [ saml: [ autoCreate: [ active: false ] ] ]
+            service.config = fakeConfig
+            service.grailsApplication = grailsApplication
 
-        service.config = fakeConfig
-        service.grailsApplication = grailsApplication
+        when:
+            def user = service.getCurrentUser()
 
-        def user = service.getCurrentUser()
-        assert user instanceof GrailsUser
-        assert user.username == grailsUser.username
+        then:
+            user instanceof GrailsUser
+            user.username == grailsUser.username
     }
 
-    @Test
     void "getCurrentUser should return user from the database when autocreate active flag is true"() {
-        def fakeConfig = [
-                userLookup: [ userDomainClassName: USER_CLASS_NAME ],
-                saml: [ autoCreate: [
-                        active: true,
-                        key: 'username' ] ] ]
+        setup:
+            def fakeConfig = [
+                    userLookup: [ userDomainClassName: 'test.TestSamlUser' ],
+                    saml: [ autoCreate: [
+                            active: true,
+                            key: 'username' ] ] ]
 
-        service.config = fakeConfig
-        service.grailsApplication = grailsApplication
+            service.config = fakeConfig
+            service.grailsApplication = grailsApplication
 
-        def user = service.getCurrentUser()
-        assert user instanceof TestSamlUser
-        assert user.username == grailsUser.username
+        when:
+            def user = service.getCurrentUser()
+
+        then:
+            user instanceof TestSamlUser
+            user.username == grailsUser.username
     }
 
-    @Test
     void "getCurrentUser should return null when the user is not logged in"() {
-        SamlSecurityService.metaClass.static.isLoggedIn = { -> false }
-        assert !service.getCurrentUser()
+        setup:
+            SamlSecurityService.metaClass.static.isLoggedIn = { -> false }
+
+        expect:
+            !service.getCurrentUser()
     }
 
-    @Test
     void "getCurrentUser should return null when autocreate active and details from session is null"() {
-        def fakeConfig = [saml: [ autoCreate: [active: true,] ] ]
+        setup:
+            def fakeConfig = [saml: [ autoCreate: [active: true,] ] ]
 
-        service.config = fakeConfig
-        authToken.setDetails(null)
+            service.config = fakeConfig
+            authToken.setDetails(null)
 
-        assert !service.getCurrentUser()
+        expect:
+            !service.getCurrentUser()
     }
 }

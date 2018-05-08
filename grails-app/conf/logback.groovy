@@ -20,4 +20,6 @@ if (Environment.isDevelopmentMode() && targetDir) {
         }
     }
     logger("StackTrace", ERROR, ['FULL_STACKTRACE'], false)
+
+    logger 'org.grails.plugin.springsecurity.saml', DEBUG, ['STDOUT'], false
 }
