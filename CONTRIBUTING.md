@@ -48,6 +48,16 @@ and/or integration tests as part of your PR.
 
 ### Gitflow Setup
 
+If you've not use Gitflow before, be aware that you can just attempt to do it manually. However,
+it's definitely much easier with the help of tools. You have a couple of options, but the below
+is mostly focused on using git CLI with Vincent Driessen's git-flow git extension:
+<https://github.com/nvie/gitflow>.
+
+If you're more comfortable with a git UI, then at least SourceTree and GitKraken are known to
+support it. (Just use the values shown below.) As for others, I'll leave that up to the reader.
+
+#### git-flow extension
+
 To make it easier for new developers on the project a shell script is provided, simply run:
 
     ./gitflow-init.sh
@@ -83,3 +93,15 @@ Work on the majority of tickets should be on a feature branch, with a name of
 All work is initially merged into `develop` (so please select that for your PRs), and then once
 we're ready for a new release a release branch will be created and the release finalised. After
 that, the latest version will be available on `master` and tags will be in place.
+
+## Working on the code
+
+This is mostly a standard Grails plugin. So your workflow can be as simple as:
+
+0. Clone and jump onto `develop` branch
+1. Make sure all is clean: `./gradlew clean`
+2. Make sure it all works in your build environment: `./gradlew check`
+3. Make some changes. . . (if you're working towards a PR, see advice above)
+4. Make sure they still work: `./gradlew check`
+5. Deploy locally for testing: `./gradlew build publishToMavenLocal`
+6. Add a suitable dependency in your projects `build.gradle`
