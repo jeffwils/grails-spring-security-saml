@@ -28,6 +28,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: "org.springframework.boot"
 apply plugin: "org.grails.grails-plugin"
+apply plugin: "org.grails.grails-plugin-publish"
 apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "com.jfrog.bintray"
@@ -37,37 +38,20 @@ apply plugin: "org.grails.grails-plugin-publish"
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
 
-bintray {
+grailsPublish {
     user = System.getenv("BINTRAY_USER") ?: System.getProperty("bintray.user") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
     key = System.getenv("BINTRAY_KEY") ?: System.getProperty("bintray.key") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
-    publications = ['maven']
-    publish = true
-    pkg {
-        repo = project.hasProperty('repo') ? project.repo : 'plugins'
-        userOrg = '' //project.hasProperty('userOrg') ? project.userOrg : 'grails'
-        name = "$project.name"
-        desc = project.hasProperty('desc') ? project.desc : "Grails $project.name plugin"
-        websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
-        issueTrackerUrl = project.hasProperty('issueTrackerUrl') ? project.issueTrackerUrl : "https://github.com/grails3-plugins/$project.name/issues"
-        vcsUrl = project.hasProperty('vcsUrl') ? project.vcsUrl : "https://github.com/grails3-plugins/$project.name"
-        licenses = project.hasProperty('license') ? [project.license] : ['Apache-2.0']
-        publicDownloadNumbers = true
-        version {
-            attributes = ['grails-plugin': "$project.group:$project.name"]
-            name = project.version
-            gpg {
-                sign = false
-                passphrase = System.getenv("SIGNING_PASSPHRASE") ?: project.hasProperty("signingPassphrase") ? project.signingPassphrase : ''
-            }
-            mavenCentralSync {
-                sync = false
-                user = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
-                password = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
-            }
-        }
+    websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
+    license {
+        name = project.hasProperty('license') ? [project.license] : ['Apache-2.0']
     }
-}
+    issueTrackerUrl = project.hasProperty('issueTrackerUrl') ? project.issueTrackerUrl : "https://github.com/grails3-plugins/$project.name/issues"
+    vcsUrl = project.hasProperty('vcsUrl') ? project.vcsUrl : "https://github.com/grails3-plugins/$project.name"
+    title = 'Grails spring-security-saml'
+    desc = project.hasProperty('desc') ? project.desc : "Grails $project.name plugin"
+    developers = [jeffwils:"Jeff Wilson",valentingoebel:"Valentin Goebel",irstevenson:"I Stevenson"]
 
+}
 
 ext {
     grailsVersion = project.grailsVersion
