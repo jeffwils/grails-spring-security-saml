@@ -259,7 +259,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                     }
                 }
 
-                // defaultIDP = conf.saml.metadata.providers[conf.saml.metadata.defaultIdp]
+                defaultIDP = conf.saml.metadata?.defaultIdp
             }
 
 
