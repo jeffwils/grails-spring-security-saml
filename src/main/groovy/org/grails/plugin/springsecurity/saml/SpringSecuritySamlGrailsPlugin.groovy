@@ -294,7 +294,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             authenticationFailureHandler(AjaxAwareAuthenticationFailureHandler) {
                 redirectStrategy = ref('redirectStrategy')
-                defaultFailureUrl = '/log4J/logging' //conf.failureHandler.defaultFailureUrl //'/login/authfail?login_error=1'
+                defaultFailureUrl = conf.saml.loginFailUrl ?: '/login/authfail?login_error=1'
                 useForward = conf.failureHandler.useForward // false
                 ajaxAuthenticationFailureUrl = conf.failureHandler.ajaxAuthFailUrl // '/login/authfail?ajax=true'
                 exceptionMappings = conf.failureHandler.exceptionMappings // [:]
