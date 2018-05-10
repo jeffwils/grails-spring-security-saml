@@ -77,16 +77,8 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     Closure doWithSpring() {
         {->
             def conf = SpringSecurityUtils.securityConfig
-            if( !conf ) {
-                println 'There is no Spring Security config, SAML plugin will not be available.'
-
+            if( !isActive( conf ) )
                 return
-            }
-            else if( !conf.saml.active ) {
-                println 'saml.active is not true, SAML plugin will not be available.'
-
-                return
-            }
 
             println 'Configuring Spring Security SAML ...'
 
@@ -403,5 +395,28 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
     void onShutdown(Map<String, Object> event) {
         // TODO Implement code that is executed when the application shuts down (optional)
+    }
+
+    private static boolean isActive( def conf ) {
+        final PLUGIN_NOT_AVAILABLE = 'SAML plugin will not be available'
+        if( !conf ) {
+            // This is unlikely to ever occur due to default configs included in plugins,
+            // but historically has always been checked, so keeping.
+            println "There is no Spring Security config, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+        else if( !conf.active ) {
+            println "Spring Security Core plugin is not active, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+        else if( !conf.saml.active ) {
+            println "saml.active is not true, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+
+        true
     }
 }
