@@ -33,7 +33,6 @@ apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "com.jfrog.bintray"
 apply plugin: "io.spring.dependency-management"
-apply plugin: "org.grails.grails-plugin-publish"
 // Used for publishing to central repository, remove if not needed
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
