@@ -196,6 +196,24 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             samlUser == null
     }
 
+    void "loadUserBySAML should use default attributes on the user details if they are missing from the saml response"() {
+        given:
+            def emailAddress = "test@mailinator.com"
+            def firstname = "Jack"
+            service.samlAutoCreateActive = false
+            service.samlAutoCreateKey = 'username'
+
+            service.samlUserAttributeMappings = [email: "$MAIL_ATTR_NAME", firstName: "$FIRSTNAME_ATTR_NAME"]
+            setMockSamlAttributes(credential, ["$USERNAME_ATTR_NAME": username, "$MAIL_ATTR_NAME": emailAddress])
+
+        when:
+            def user = service.loadUserBySAML(credential)
+            def samlUser = TestSamlUser.findByUsername(username)
+        then: "no missing property exception will occur"
+            user.email == emailAddress
+            user.firstName == null
+    }
+
     void "loadUserBySAML should not persist a user that already exists"() {
         given:
             service.samlAutoCreateActive = true

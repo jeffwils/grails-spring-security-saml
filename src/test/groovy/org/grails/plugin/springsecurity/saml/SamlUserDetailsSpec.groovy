@@ -54,4 +54,24 @@ class SamlUserDetailsSpec extends Specification {
         then:
             thrown MissingPropertyException
     }
+
+    void "test access to a boolean saml attribute"() {
+        setup:
+            def user = new SamlUserDetails(username, password,
+                true, true, true, true, [],
+                username, [real: false])
+
+        expect:
+            user.real == false
+    }
+
+    void "test access to a null saml attribute"() {
+        setup:
+            def user = new SamlUserDetails(username, password,
+                true, true, true, true, [],
+                username, [organisation: null])
+
+        expect:
+            user.organisation == null
+    }
 }

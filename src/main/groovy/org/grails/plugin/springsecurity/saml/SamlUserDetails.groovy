@@ -26,7 +26,7 @@ class SamlUserDetails extends GrailsUser {
 
     def getProperty(String name) {
         def attribute = samlAttributes[name]
-        if(attribute && !hasProperty(name)) {
+        if(samlAttributes.containsKey(name) && !hasProperty(name)) {
             return attribute
         }
         return metaClass.getProperty(this, name)
