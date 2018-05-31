@@ -18,7 +18,7 @@ import grails.gorm.transactions.Transactional
 
 import grails.plugin.springsecurity.userdetails.GormUserDetailsService
 import groovy.util.logging.Slf4j
-import org.springframework.beans.BeanUtils
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -46,6 +46,8 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     String samlUserGroupAttribute
     String userDomainClassName
 
+    @Value( '${grails.plugin.springsecurity.saml.useLocalRoles:false}' )
+    Boolean samlUseLocalRoles
 
 
     public Object loadUserBySAML(SAMLCredential credential) throws UsernameNotFoundException {
@@ -122,6 +124,21 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
+        if( samlUseLocalRoles ) {
+            logger.debug( 'Using role assignments from local database.' )
+
+            def user = userClass.get( username )
+            if( user ) {
+                loadAuthorities( user, username, true ).each { authority ->
+                    authorities.add( authority )
+                }
+                logger.debug( "Added ${authorities.size()} role(s) from local database." )
+            }
+            else {
+                logger.debug( "User $username does not exist in local database, unable to load local roles.")
+            }
+        }
+
         logger.debug( 'Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
         String[] samlGroups = credential.getAttributeAsStringArray(samlUserGroupAttribute)
         logger.debug( 'Using samlGroups: ' + samlGroups )
@@ -141,31 +158,12 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
             }
         }
         logger.debug("Returning Authorities with  ${authorities?.size()} Authorities Added")
-        return authorities
+
+        authorities
     }
 
-
     private Object generateSecurityUser(username) {
-
-        if (userDomainClassName) {
-            logger.debug("UserClassName ${userDomainClassName}")
-            Class<?> UserClass = grailsApplication.getClassForName(userDomainClassName)
-            logger.debug("Artefact ${grailsApplication.getClassForName(userDomainClassName)}")
-            logger.debug("Config ${grailsApplication.config.toString()}")
-
-                    //getClassForName(userDomainClassName)?.clazz
-            logger.debug("UserClass ${UserClass}")
-            if (UserClass) {
-                def user = BeanUtils.instantiateClass(UserClass)
-                user.username = username
-                user.password = "password"
-                return user
-            } else {
-                throw new ClassNotFoundException("domain class ${userDomainClassName} not found")
-            }
-        } else {
-            throw new ClassNotFoundException("security user domain class undefined")
-        }
+        userClass.newInstance( username: username, password: 'password' )
     }
 
     private def saveUser(userClazz, user, authorities) {
@@ -257,5 +255,21 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                 throw new ClassNotFoundException("domain class ${authorityClassName} not found")
             }
         }
+    }
+
+    private Class getUserClass() {
+        logger.debug("Attempting to load UserClass with name: ${userDomainClassName}")
+
+        if (!userDomainClassName) {
+            throw new ClassNotFoundException( 'Security user domain class undefined.' )
+        }
+
+        Class userClass = grailsApplication.getClassForName(userDomainClassName)
+        if( !userClass ) {
+            throw new ClassNotFoundException( "Domain class ${userDomainClassName} not found." )
+        }
+        logger.debug("Loaded UserClass: ${userClass}")
+
+        userClass
     }
 }
