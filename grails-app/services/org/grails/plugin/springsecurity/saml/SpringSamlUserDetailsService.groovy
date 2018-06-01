@@ -124,31 +124,26 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
-        if( samlUseLocalRoles ) {
-            logger.debug( 'Using role assignments from local database.' )
-
-            def user = userClass.findByUsername( username )
-            if( user ) {
-                loadAuthorities( user, username, true ).each { authority ->
-                    authorities.add( authority )
-                }
-                logger.debug( "Added ${authorities.size()} role(s) from local database." )
-            }
-            else {
-                logger.debug( "User $username does not exist in local database, unable to load local roles.")
-            }
+        if (samlUseLocalRoles) {
+            addLocalRoles(authorities, username)
         }
+        addSamlRoles(authorities, credential)
 
-        logger.debug( 'Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
+        logger.debug("Returning Authorities with ${authorities?.size()} Authorities added.")
+        authorities
+    }
+
+    private void addSamlRoles(Set<GrantedAuthority> authorities, SAMLCredential credential) {
+        logger.debug('Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
         String[] samlGroups = credential.getAttributeAsStringArray(samlUserGroupAttribute)
-        logger.debug( 'Using samlGroups: ' + samlGroups )
-        logger.debug( 'User samlUserGroupToRoleMapping: ' + samlUserGroupToRoleMapping )
+        logger.debug('Using samlGroups: ' + samlGroups)
+        logger.debug('User samlUserGroupToRoleMapping: ' + samlUserGroupToRoleMapping)
 
         samlGroups.eachWithIndex { groupName, groupIdx ->
             logger.debug("Group Name From SAML: ${groupName}")
-            def role = samlUserGroupToRoleMapping?.find{ it?.value == groupName }?.key
+            def role = samlUserGroupToRoleMapping?.find { it?.value == groupName }?.key
             def authority
-            if (role){
+            if (role) {
                 logger.debug("Found Role")
                 authority = getRole(role)
             }
@@ -157,10 +152,23 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                 authorities.add(new SimpleGrantedAuthority(authority."$authorityNameField"))
             }
         }
-        logger.debug("Returning Authorities with  ${authorities?.size()} Authorities Added")
-
-        authorities
     }
+
+    private void addLocalRoles( Set<GrantedAuthority> authorities, String username ) {
+        logger.debug( 'Using role assignments from local database.' )
+
+        def user = userClass.findByUsername( username )
+        if( user ) {
+            loadAuthorities( user, username, true ).each { authority ->
+                authorities.add( authority )
+            }
+            logger.debug( "Added ${authorities.size()} role(s) from local database." )
+        }
+        else {
+            logger.debug( "User $username does not exist in local database, unable to load local roles.")
+        }
+    }
+
 
     private Object generateSecurityUser(username) {
         userClass.newInstance( username: username, password: 'password' )
