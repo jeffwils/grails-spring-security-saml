@@ -127,7 +127,7 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         if( samlUseLocalRoles ) {
             logger.debug( 'Using role assignments from local database.' )
 
-            def user = userClass.get( username )
+            def user = userClass.findByUsername( username )
             if( user ) {
                 loadAuthorities( user, username, true ).each { authority ->
                     authorities.add( authority )
