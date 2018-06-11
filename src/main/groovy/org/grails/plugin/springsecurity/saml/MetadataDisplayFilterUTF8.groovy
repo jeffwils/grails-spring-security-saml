@@ -12,6 +12,11 @@ import javax.servlet.ServletResponseWrapper
 class MetadataDisplayFilterUTF8 extends MetadataDisplayFilter {
     @Override
     protected void processMetadataDisplay(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        // The current version of Spring Security SAML (1.02)
+        // does not use UTF-8 by default
+        // This workaround is no longer necessary when
+        // Spring Security SAML 1.04 is released because
+        // it uses UTF-8 by default
         response.setCharacterEncoding("UTF-8")
         super.processMetadataDisplay(request,response)
     }
