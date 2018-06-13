@@ -63,34 +63,21 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
             logger.debug("Generated User ${user.username}")
             user = mapAdditionalAttributes(credential, user)
             if (user) {
-                logger.debug "Loading database roles for $username..."
-                def authorities = getAuthoritiesForUser(credential, username)
-
-                def grantedAuthorities = []
+                def grantedAuthorities = getAuthoritiesForUser(credential, username)
                 if (samlAutoCreateActive) {
-                    user = saveUser(user.class, user, authorities)
-
-                    //TODO move to function
-                    Map whereClause = [:]
-                    whereClause.put "user", user
-                    Class<?> UserRoleClass = grailsApplication.getDomainClass(authorityJoinClassName)?.clazz
-                    UserRoleClass.withTransaction {
-                        def auths = UserRoleClass.findAllWhere(whereClause).collect { it.role }
-
-                        auths.each { authority ->
-                            grantedAuthorities.add(new SimpleGrantedAuthority(authority."$authorityNameField"))
-
-                        }
-                    }
+                    user = saveUser(user.class, user, grantedAuthorities)
+                    // load any new local DB roles
+                    grantedAuthorities.addAll(
+                        determineLocalRoles( username )
+                    )
                 }
-                else {
-                    grantedAuthorities = authorities
-                }
+
                 logger.debug("User Class ${user?.class}")
                 logger.debug("User - username ${user?.username}")
                 logger.debug("User - id ${user?.id}")
                 def userDetails = createUserDetails(user, grantedAuthorities)
                 logger.debug("User Details ${userDetails.toString()}")
+
                 return userDetails
             } else {
                 throw new InstantiationException('could not instantiate new user')
@@ -124,24 +111,31 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
+        logger.debug "Determining Authorities for $username"
         if (samlUseLocalRoles) {
-            addLocalRoles(authorities, username)
+            authorities.addAll(
+                determineLocalRoles(username)
+            )
+
         }
-        addSamlRoles(authorities, credential)
+        authorities.addAll (
+            determineSamlRoles( credential )
+        )
 
         logger.debug("Returning Authorities with ${authorities?.size()} Authorities added.")
         authorities
     }
 
-    private void addSamlRoles(Set<GrantedAuthority> authorities, SAMLCredential credential) {
+    private Set<SimpleGrantedAuthority> determineSamlRoles(SAMLCredential credential) {
         logger.debug('Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
         String[] samlGroups = credential.getAttributeAsStringArray(samlUserGroupAttribute)
         logger.debug('Using samlGroups: ' + samlGroups)
         logger.debug('User samlUserGroupToRoleMapping: ' + samlUserGroupToRoleMapping)
 
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>()
         samlGroups.eachWithIndex { groupName, groupIdx ->
             logger.debug("Group Name From SAML: ${groupName}")
-            def role = samlUserGroupToRoleMapping?.find { it?.value == groupName }?.key
+            String role = samlUserGroupToRoleMapping?.find { it?.value == groupName }?.key
             def authority
             if (role) {
                 logger.debug("Found Role")
@@ -152,21 +146,28 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                 authorities.add(new SimpleGrantedAuthority(authority."$authorityNameField"))
             }
         }
+
+        authorities
     }
 
-    private void addLocalRoles( Set<GrantedAuthority> authorities, String username ) {
+    private Set<SimpleGrantedAuthority> determineLocalRoles( String username ) {
         logger.debug( 'Using role assignments from local database.' )
 
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>()
         def user = userClass.findByUsername( username )
         if( user ) {
             loadAuthorities( user, username, true ).each { authority ->
-                authorities.add( authority )
+                authorities.add(
+                    new SimpleGrantedAuthority( authority.authority )
+                )
             }
             logger.debug( "Added ${authorities.size()} role(s) from local database." )
         }
         else {
             logger.debug( "User $username does not exist in local database, unable to load local roles.")
         }
+
+        authorities
     }
 
 
