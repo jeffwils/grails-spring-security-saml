@@ -3,9 +3,10 @@
 This plugin provides SAML 2.0 support for Grails 3 applications.  It was originally built from the Plugin that supported Grails 2 applications.  It enables SAML configuration directly from your application.yml or application.groovy without having to manually configure the Spring SAML Plugin and Grails Spring Security Plugin
 
 ### Plugin Compatibility with Grails
-Grails 3.0.x - Use Version 3.0.x of the plugin
-Grails 3.1.x - Use Version 3.1.x of the plugin
-Grails 3.3.x - Use Version 3.3.x of the plugin
+
+* Grails 3.0.x - Use Version 3.0.x of the plugin
+* Grails 3.1.x - Use Version 3.1.x of the plugin
+* Grails 3.3.x - Use Version 3.3.x of the plugin
 
 ### Installation
 **Maven**
@@ -71,7 +72,8 @@ grails:
 ```
 
 #### Property Table
-All of these properties can be put in either application.yml or application.groovy and they are all prefixed with:
+
+All of these properties can be put in either `application.yml` or `application.groovy` and they are all prefixed with:
 **grails.plugins.springsecurity.saml**
 
 
@@ -86,6 +88,7 @@ All of these properties can be put in either application.yml or application.groo
 | userAttributeMappings | Map | [username:'funkyUserNameFromIDP'] | Allows Custom Mapping if both Application and IDP Attribute Names cannot be changed. |
 | userGroupAttribute | String Value | 'memberOf' | Corresponds to the Role Designator in the SAML Assertion from the IDP |
 | userGroupToRoleMapping | Map [Spring Security Role: Saml Assertion Role] | [ROLE_MY_APP_ROLE: 'CN=MYSAMLGROUP, OU=MyAppGroups, DC=myldap, DC=example, DC=com'] | This maps the Spring Security Roles in your application to the roles from the SAML Assertion.  Only roles in this Map will be resolved. |
+| useLocalRoles | boolean | true | Determine a user's role based on the existing values in the local Spring Security tables. Will merge with additional roles loaded via `userGroupAttribute` and `userGroupToRoleMapping`. Defaults to `false`.
 | autoCreate.active | boolean | false | If you want the plugin to generate users in the DB as they are authenticated via SAML
 | autoCreate.key | domain class unique identifier | 'id' | if autoCreate active is true then this is the unique id field of the db table |
 | autoCreate.assignAuthorities | boolean | false | If you want the plugin to insert the authorities that come from the SAML message into the UserRole Table. |

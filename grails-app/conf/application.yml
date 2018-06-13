@@ -61,7 +61,6 @@ grails:
                   usernamePropertyName: 'username'
                   enabledPropertyName: 'enabled'
                   passwordPropertyName: 'password'
-                  authoritiesPropertyName: 'roles'
                   authorityJoinClassName: 'test.TestUserRole'
             requestMap:
                   className: 'test/TestRequestmap'
@@ -69,7 +68,6 @@ grails:
                   configAttributeField: 'rolePattern'
             authority:
                   className: 'test.testRole'
-                  nameField: 'auth'
             saml:
                   userAttributeMappings:
                       username: 'username'
