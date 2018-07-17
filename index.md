@@ -57,7 +57,7 @@ All of these properties can be put in either `application.yml` or `application.g
 | autoCreate.key | domain class unique identifier | 'id' | if autoCreate active is true then this is the unique id field of the db table |
 | autoCreate.assignAuthorities | boolean | false | If you want the plugin to insert the authorities that come from the SAML message into the UserRole Table. |
 | metadata.providers | Map [idp alias: idp file reference] | [ping:"/pathtoIdpFile/myIdp.xml"] | Map of idp providers. Contain an alias and reference to the idp xml file |
-| metadata.defaultIdp | String | 'ping' | the default Idp from the ones listed in the metadata.provider map |
+| metadata.defaultIdp | String | 'ping' | the entityId of the default Idp from the ones listed in the metadata.provider map |
 | metadata.url | relative url | '/saml/metadata' | url used to retrieve the SP metadata for your app to send to the IDP |
 | metadata.sp.file | file reference as string | "/mySpFilePath/myspfile.xml" | Reference to your SP XML File.  This can be on the classpath or in your file system. |
 | metadata.sp.defaults.local | boolean | true | True for metadata of a local service provider. False for remote identity providers. |
