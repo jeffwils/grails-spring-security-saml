@@ -19,11 +19,19 @@ To run s2-quickstart, see [s2-quickstart](https://grails-plugins.github.io/grail
 Command Line Example
 
 ```
-$> grails s2-quickstart com.jeffwils User Role
+$> grails s2-quickstart com.jeffwils UserAcct Role
 ```
 
+This will create the Spring Security Domain Classes and it will create/modify the application.groovy file. You can convert the generated configuration to yaml format and use it in application.yml as well.
 
-This will create the Spring Security Domain Classes and it will create/modify the application.groovy file.  You can convert the generated configuration to yaml format and use in application.yml as well.
+Warning: Some table or column names may conflict with existing SQL keywords such as 'USER' or 'PASSWORD' on postgres or other RDBMS. If neccessary these can be adjusted in the mapping block of your user domain class:
+
+```
+static mapping = {
+    table 'users'
+    password column: '`password`'
+}
+```
 
 #### Authentication Provider
 The plugin sets up a SAML Authentication provider **samlAuthenticationProvider** which can be referenced in the Grails Spring Security Plugin configuration
