@@ -65,7 +65,7 @@ All of these properties can be put in either `application.yml` or `application.g
 | autoCreate.key | domain class unique identifier | 'id' | if autoCreate active is true then this is the unique id field of the db table |
 | autoCreate.assignAuthorities | boolean | false | If you want the plugin to insert the authorities that come from the SAML message into the UserRole Table. |
 | metadata.providers | Map [idp alias: idp file reference] | [ping:"/pathtoIdpFile/myIdp.xml"] | Map of idp providers. Contain an alias and reference to the idp xml file |
-| metadata.defaultIdp | String | 'ping' | the entityId of the default Idp from the ones listed in the metadata.provider map |
+| metadata.defaultIdp | String | 'https://idp.example.org/idp/shibboleth' | the entityId of the default Idp from the ones listed in the metadata.provider map. If no entityId is given an IDP will be picked from the list automatically. |
 | metadata.url | relative url | '/saml/metadata' | url used to retrieve the SP metadata for your app to send to the IDP |
 | metadata.sp.file | file reference as string | "/mySpFilePath/myspfile.xml" | Reference to your SP XML File.  This can be on the classpath or in your file system. |
 | metadata.sp.defaults.local | boolean | true | True for metadata of a local service provider. False for remote identity providers. |
@@ -296,7 +296,7 @@ grails.plugin.springsecurity.saml.userGroupAttribute = 'roles'
 grails.plugin.springsecurity.saml.autoCreate.active = false  //If you want the plugin to generate users in the DB as they are authenticated via SAML
 grails.plugin.springsecurity.saml.autoCreate.key = 'id'
 grails.plugin.springsecurity.saml.autoCreate.assignAuthorities=false  //If you want the plugin to assign the authorities that come from the SAML message.
-grails.plugin.springsecurity.saml.metadata.defaultldp = 'ping'
+grails.plugin.springsecurity.saml.metadata.defaultIdp = 'localhost:default:entityId'
 grails.plugin.springsecurity.saml.metadata.url = '/saml/metadata'
 grails.plugin.springsecurity.saml.metadata.providers = [ping:'security/idp-local.xml']
 grails.plugin.springsecurity.saml.metadata.sp.file = "security/sp.xml"
@@ -367,7 +367,7 @@ grails:
                key: 'id'
                assignAuthorities: false  //If you want the plugin to assign the authorities that come from the SAML message.
             metadata:
-               defaultldp: 'ping'
+               defaultIdp: 'localhost:default:entityId'
                url: '/saml/metadata'
                providers: [ping:'security/idp-local.xml']
                sp:

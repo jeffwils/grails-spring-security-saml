@@ -147,4 +147,8 @@ task wrapper(type: Wrapper) {
 
 jar {
     exclude 'test/**'
+    exclude 'security/keystore.jks'
+    exclude 'security/sp.xml'
+    exclude 'security/idp-local.xml'
+    exclude 'saml/test.xml'
 }

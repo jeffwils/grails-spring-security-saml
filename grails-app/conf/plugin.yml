@@ -14,10 +14,9 @@ grails:
                     assignAuthorities: true
                 metadata:
                     timeout: 5000
-                    defaultIdp: 'ping'
+                    defaultIdp: ''
                     url: '/saml/metadata'
-                    providers:
-                        ping: 'security/idp-local.xml'
+                    providers: {}
                     sp:
                         file: 'security/sp.xml'
                         defaults:

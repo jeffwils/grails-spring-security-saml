@@ -265,8 +265,9 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                         hostedSPName = defaultSpConfig?."alias"
                     }
                 }
-
-                defaultIDP = conf.saml.metadata?.defaultIdp
+                if(conf.saml.metadata?.defaultIdp != '') {
+                    defaultIDP = conf.saml.metadata?.defaultIdp
+                }
             }
 
 

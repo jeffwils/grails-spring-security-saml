@@ -81,7 +81,7 @@ grails:
                        key: 'username'
                        assignAuthorities: true
                   metadata:
-                       defaultIdp: 'ping'
+                       defaultIdp: 'localhost:default:entityId'
                        url: '/saml/metadata'
                        providers:
                            ping: 'security/idp-local.xml'
