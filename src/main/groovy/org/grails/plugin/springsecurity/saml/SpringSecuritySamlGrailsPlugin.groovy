@@ -111,6 +111,13 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             SAMLLogger(SAMLDefaultLogger)
 
+
+            if(!new File(conf.saml.keyManager.storeFile).exists() || !new ClassPathResource(conf.saml.keyManager.storeFile).exists()) {
+                throw new IOException("Keystore cannot be loaded from file '${conf.saml.keyManager.storeFile}'. " +
+                         "Please check that the path configured in " +
+                         "'grails.plugin.springsecurity.saml.keyManager.storeFile' in your application.yml is correct.")
+            }
+
             keyManager(JKSKeyManager,
                     conf.saml.keyManager.storeFile, conf.saml.keyManager.storePass, conf.saml.keyManager.passwords, conf.saml.keyManager.defaultKey)
 
@@ -158,6 +165,11 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                                 bean.constructorArgs = [resource]
                             } else {
                                 def resource = new ClassPathResource(v)
+                                if(!resource.exists()) {
+                                    throw new IOException("Identity provider metadata cannot be loaded from file '${v}'. " +
+                                             "Please check that the path configured in " +
+                                             "'grails.plugin.springsecurity.saml.providers.${k}' in your application.yml is correct.")
+                                }
                                 try {
                                     bean.constructorArgs = [resource.getFile()]
                                 } catch (FileNotFoundException fe) {
@@ -196,7 +208,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             def spFile = conf.saml.metadata.sp.file
             def defaultSpConfig = conf.saml.metadata.sp.defaults
             if (spFile) {
-                println "Sp File exists ${spFile}"
+                println "Loading the service provider metadata from ${spFile}..."
                 spMetadata(ExtendedMetadataDelegate) { spMetadataBean ->
                     spMetadataProvider(FilesystemMetadataProvider) { spMetadataProviderBean ->
                         if (spFile.startsWith("/") || spFile.indexOf(':') == 1) {
@@ -204,6 +216,11 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                             spMetadataProviderBean.constructorArgs = [spResource]
                         }else{
                             def spResource = new ClassPathResource(spFile)
+                            if(!spResource.exists()) {
+                                throw new IOException("Service provider metadata cannot be loaded from file '${spFile}'. " +
+                                         "Please check that the path configured in " +
+                                         "'grails.plugin.springsecurity.saml.metadata.sp.file' in your application.yml is correct.")
+                            }
                             try{
                                 spMetadataProviderBean.constructorArgs = [spResource.getFile()]
                             } catch(FileNotFoundException fe){
@@ -226,7 +243,6 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                                 } finally {
                                     is.close();
                                 }
-
                             }
                         }
 
