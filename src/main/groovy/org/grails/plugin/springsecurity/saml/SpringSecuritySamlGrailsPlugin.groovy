@@ -111,8 +111,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             SAMLLogger(SAMLDefaultLogger)
 
-
-            if(!new File(conf.saml.keyManager.storeFile).exists() || !new ClassPathResource(conf.saml.keyManager.storeFile).exists()) {
+            if(!getResource(conf.saml.keyManager.storeFile).exists()) {
                 throw new IOException("Keystore cannot be loaded from file '${conf.saml.keyManager.storeFile}'. " +
                          "Please check that the path configured in " +
                          "'grails.plugin.springsecurity.saml.keyManager.storeFile' in your application.yml is correct.")
