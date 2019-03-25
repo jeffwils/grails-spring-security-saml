@@ -9,6 +9,7 @@ import org.jdom.output.XMLOutputter
 import org.jdom.output.Format
 import org.springframework.core.io.ClassPathResource;
 import grails.plugin.springsecurity.web.authentication.AjaxAwareAuthenticationFailureHandler
+import org.springframework.security.saml.metadata.MetadataGeneratorFilter
 import org.springframework.security.web.DefaultRedirectStrategy
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler
@@ -94,6 +95,9 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             SpringSecurityUtils.registerProvider 'samlAuthenticationProvider'
             SpringSecurityUtils.registerLogoutHandler 'logoutHandler'
+
+            //Add auto generation of default SP metadata.
+            SpringSecurityUtils.registerFilter 'metadataGeneratorFilter', SecurityFilterPosition.FIRST.order + 1
             SpringSecurityUtils.registerFilter 'samlEntryPoint', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 1
             SpringSecurityUtils.registerFilter 'metadataFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 2
             SpringSecurityUtils.registerFilter 'samlProcessingFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 3
@@ -131,7 +135,9 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 filterProcessesUrl = conf.saml.metadata.url 						// '/saml/metadata'
             }
 
-            metadataGenerator(MetadataGenerator)
+            metadataGenerator(MetadataGenerator) {
+                entityBaseURL = conf.saml.entityBaseURL
+            }
 
             // TODO: Update to handle any type of meta data providers for default to file based instead http provider.
             log.debug "Dynamically defining bean metadata providers... "
@@ -362,6 +368,11 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             }
 
             parserPool(BasicParserPool)
+
+            //-- Self registartion of SP metadata
+            metadataGeneratorFilter(MetadataGeneratorFilter) { bean ->
+                bean.constructorArgs = [ref('metadataGenerator')]
+            }
 
             securityTagLib(SamlTagLib) {
                 springSecurityService = ref('springSecurityService')
