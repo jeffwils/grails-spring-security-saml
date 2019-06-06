@@ -33,7 +33,6 @@ apply plugin: "org.grails.grails-gsp"
 apply plugin: "com.jfrog.artifactory"
 apply plugin: "com.jfrog.bintray"
 apply plugin: "io.spring.dependency-management"
-apply plugin: "org.grails.grails-plugin-publish"
 // Used for publishing to central repository, remove if not needed
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/grailsCentralPublishing.gradle'
 //apply from:'https://raw.githubusercontent.com/grails/grails-profile-repository/master/profiles/plugin/templates/bintrayPublishing.gradle'
@@ -43,7 +42,7 @@ grailsPublish {
     key = System.getenv("BINTRAY_KEY") ?: System.getProperty("bintray.key") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
     websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
     license {
-        name = project.hasProperty('license') ? [project.license] : ['Apache-2.0']
+        name = project.hasProperty('license') ? project.license : 'Apache-2.0'
     }
     issueTrackerUrl = project.hasProperty('issueTrackerUrl') ? project.issueTrackerUrl : "https://github.com/grails3-plugins/$project.name/issues"
     vcsUrl = project.hasProperty('vcsUrl') ? project.vcsUrl : "https://github.com/grails3-plugins/$project.name"
@@ -148,4 +147,8 @@ task wrapper(type: Wrapper) {
 
 jar {
     exclude 'test/**'
+    exclude 'security/keystore.jks'
+    exclude 'security/sp.xml'
+    exclude 'security/idp-local.xml'
+    exclude 'saml/test.xml'
 }

@@ -40,6 +40,7 @@ import org.springframework.security.saml.key.JKSKeyManager
 import org.springframework.security.saml.util.VelocityFactory
 import org.springframework.security.saml.context.SAMLContextProviderImpl
 import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider
+import org.opensaml.saml2.metadata.provider.HTTPMetadataProvider
 import org.opensaml.xml.parse.BasicParserPool
 import org.apache.commons.httpclient.HttpClient
 
@@ -77,11 +78,8 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     Closure doWithSpring() {
         {->
             def conf = SpringSecurityUtils.securityConfig
-            if (!conf || !conf.active) { return }
-
-//            SpringSecurityUtils.loadSecondaryConfig 'DefaultSamlSecurityConfig'
-//            conf = SpringSecurityUtils.securityConfig
-//            if (!conf.saml.active) { return }
+            if( !isActive( conf ) )
+                return
 
             println 'Configuring Spring Security SAML ...'
 
@@ -113,6 +111,12 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             SAMLLogger(SAMLDefaultLogger)
 
+            if(!getResource(conf.saml.keyManager.storeFile).exists()) {
+                throw new IOException("Keystore cannot be loaded from file '${conf.saml.keyManager.storeFile}'. " +
+                         "Please check that the path configured in " +
+                         "'grails.plugin.springsecurity.saml.keyManager.storeFile' in your application.yml is correct.")
+            }
+
             keyManager(JKSKeyManager,
                     conf.saml.keyManager.storeFile, conf.saml.keyManager.storePass, conf.saml.keyManager.passwords, conf.saml.keyManager.defaultKey)
 
@@ -129,7 +133,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 includeScoping = false
             }
 
-            metadataFilter(MetadataDisplayFilter) {
+            metadataFilter(MetadataDisplayFilterUTF8) {
                 filterProcessesUrl = conf.saml.metadata.url 						// '/saml/metadata'
             }
 
@@ -143,43 +147,57 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 println "Registering metadata key: ${k} and value: $v"
                 "${providerBeanName}"(ExtendedMetadataDelegate) { extMetaDataDelegateBean ->
 
-                        metadataTrustCheck = false
-                        metadataRequireSignature = false
+                    metadataTrustCheck = false
+                    metadataRequireSignature = false
 
-                    filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
-                        if (v.startsWith("/") || v.indexOf(':') == 1) {
-                            File resource = new File(v)
-                            bean.constructorArgs = [resource]
-                        }else{
-                            def resource = new ClassPathResource(v)
-                            try{
-                                bean.constructorArgs = [resource.getFile()]
-                            }catch (FileNotFoundException fe){
-                                final InputStream is = resource.getInputStream();
+                    if(v.startsWith("https:") || v.startsWith("http:")) {
+                        def timeout = conf.saml.metadata.timeout
+                        def url = v
+                        httpMetadataProvider(HTTPMetadataProvider, url, timeout) { bean ->
+                            parserPool = ref('parserPool')
+                        }
+                        extMetaDataDelegateBean.constructorArgs = [ref('httpMetadataProvider'), new ExtendedMetadata()]
+                    } else {
+                        filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
+                            if (v.startsWith("/") || v.indexOf(':') == 1) {
+                                File resource = new File(v)
+                                bean.constructorArgs = [resource]
+                            } else {
+                                def resource = new ClassPathResource(v)
+                                if(!resource.exists()) {
+                                    throw new IOException("Identity provider metadata cannot be loaded from file '${v}'. " +
+                                             "Please check that the path configured in " +
+                                             "'grails.plugin.springsecurity.saml.providers.${k}' in your application.yml is correct.")
+                                }
                                 try {
-                                    final InputStreamReader reader = new InputStreamReader(is);
+                                    bean.constructorArgs = [resource.getFile()]
+                                } catch (FileNotFoundException fe) {
+                                    final InputStream is = resource.getInputStream();
                                     try {
-                                        final Document headerDoc = new SAXBuilder().build(reader);
-                                        XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-                                        String xmlString = outputter.outputString(headerDoc);
-                                        File temp = File.createTempFile("idp-local",".xml");
-                                        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-                                        bw.write(xmlString);
-                                        bw.close();
-                                        bean.constructorArgs = [temp]
-                                        temp.deleteOnExit();
+                                        final InputStreamReader reader = new InputStreamReader(is);
+                                        try {
+                                            final Document headerDoc = new SAXBuilder().build(reader);
+                                            XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+                                            String xmlString = outputter.outputString(headerDoc);
+                                            File temp = File.createTempFile("idp-local",".xml");
+                                            BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+                                            bw.write(xmlString);
+                                            bw.close();
+                                            bean.constructorArgs = [temp]
+                                            temp.deleteOnExit();
+                                        } finally {
+                                            reader.close();
+                                        }
                                     } finally {
-                                        reader.close();
+                                        is.close();
                                     }
-                                } finally {
-                                    is.close();
                                 }
                             }
+                            parserPool = ref('parserPool')
                         }
-                        parserPool = ref('parserPool')
-                    }
 
-                    extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
+                        extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
+                    }
                 }
 
                 providers << ref(providerBeanName)
@@ -189,7 +207,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
             def spFile = conf.saml.metadata.sp.file
             def defaultSpConfig = conf.saml.metadata.sp.defaults
             if (spFile) {
-                println "Sp File exists ${spFile}"
+                println "Loading the service provider metadata from ${spFile}..."
                 spMetadata(ExtendedMetadataDelegate) { spMetadataBean ->
                     spMetadataProvider(FilesystemMetadataProvider) { spMetadataProviderBean ->
                         if (spFile.startsWith("/") || spFile.indexOf(':') == 1) {
@@ -197,6 +215,11 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                             spMetadataProviderBean.constructorArgs = [spResource]
                         }else{
                             def spResource = new ClassPathResource(spFile)
+                            if(!spResource.exists()) {
+                                throw new IOException("Service provider metadata cannot be loaded from file '${spFile}'. " +
+                                         "Please check that the path configured in " +
+                                         "'grails.plugin.springsecurity.saml.metadata.sp.file' in your application.yml is correct.")
+                            }
                             try{
                                 spMetadataProviderBean.constructorArgs = [spResource.getFile()]
                             } catch(FileNotFoundException fe){
@@ -219,7 +242,6 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                                 } finally {
                                     is.close();
                                 }
-
                             }
                         }
 
@@ -258,8 +280,9 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                         hostedSPName = defaultSpConfig?."alias"
                     }
                 }
-
-                // defaultIDP = conf.saml.metadata.providers[conf.saml.metadata.defaultIdp]
+                if(conf.saml.metadata?.defaultIdp != '') {
+                    defaultIDP = conf.saml.metadata?.defaultIdp
+                }
             }
 
 
@@ -294,7 +317,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             authenticationFailureHandler(AjaxAwareAuthenticationFailureHandler) {
                 redirectStrategy = ref('redirectStrategy')
-                defaultFailureUrl = '/log4J/logging' //conf.failureHandler.defaultFailureUrl //'/login/authfail?login_error=1'
+                defaultFailureUrl = conf.saml.loginFailUrl ?: '/login/authfail?login_error=1'
                 useForward = conf.failureHandler.useForward // false
                 ajaxAuthenticationFailureUrl = conf.failureHandler.ajaxAuthFailUrl // '/login/authfail?ajax=true'
                 exceptionMappings = conf.failureHandler.exceptionMappings // [:]
@@ -398,5 +421,28 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
     void onShutdown(Map<String, Object> event) {
         // TODO Implement code that is executed when the application shuts down (optional)
+    }
+
+    private static boolean isActive( def conf ) {
+        final PLUGIN_NOT_AVAILABLE = 'SAML plugin will not be available'
+        if( !conf ) {
+            // This is unlikely to ever occur due to default configs included in plugins,
+            // but historically has always been checked, so keeping.
+            println "There is no Spring Security config, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+        else if( !conf.active ) {
+            println "Spring Security Core plugin is not active, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+        else if( !conf.saml.active ) {
+            println "saml.active is not true, $PLUGIN_NOT_AVAILABLE."
+
+            return false
+        }
+
+        true
     }
 }
