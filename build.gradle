@@ -42,7 +42,7 @@ grailsPublish {
     key = System.getenv("BINTRAY_KEY") ?: System.getProperty("bintray.key") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
     websiteUrl = project.hasProperty('websiteUrl') ? project.websiteUrl : "http://grails.org/plugin/$project.name"
     license {
-        name = project.hasProperty('license') ? [project.license] : ['Apache-2.0']
+        name = project.hasProperty('license') ? project.license : 'Apache-2.0'
     }
     issueTrackerUrl = project.hasProperty('issueTrackerUrl') ? project.issueTrackerUrl : "https://github.com/grails3-plugins/$project.name/issues"
     vcsUrl = project.hasProperty('vcsUrl') ? project.vcsUrl : "https://github.com/grails3-plugins/$project.name"
