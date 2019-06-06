@@ -13,17 +13,17 @@ This plugin provides SAML 2.0 support for Grails 3 applications.  It was origina
 
 ```xml
 <dependency>
-  <groupId>org.grails.plugins</groupId>
-  <artifactId>spring-security-saml</artifactId>
-  <version>3.3.1</version>
-  <type>pom</type>
+    <groupId>org.grails.plugins</groupId>
+    <artifactId>spring-security-saml</artifactId>
+    <version>3.3.1</version>
+    <type>pom</type>
 </dependency>
 ```
 
 **Gradle**
 
 ```gradle
-	compile 'org.grails.plugins:spring-security-saml:3.3.1'
+compile 'org.grails.plugins:spring-security-saml:3.3.1'
 ```
 
 NOTE: you may have to add the following repositories
