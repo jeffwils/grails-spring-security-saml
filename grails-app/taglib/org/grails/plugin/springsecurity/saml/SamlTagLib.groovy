@@ -39,7 +39,7 @@ class SamlTagLib extends SecurityTagLib {
         url = "${contextPath}${url}"
         if (!selectIdp) {
             def defaultIdp = Holders.grailsApplication.config.grails.plugin.springsecurity.saml.metadata.defaultIdp
-            url += "?idp=${Holders.grailsApplication.config.grails.plugin.springsecurity.saml.metadata.providers[defaultIdp]}"
+            url += "?idp=${defaultIdp}"
         }
 
         def elementClass = generateClassAttribute(attrs)

@@ -7,7 +7,7 @@ import spock.lang.Specification
 
 class SamlTagLibSpec extends Specification implements TagLibUnitTest<SamlTagLib> {
     // Uses the default as specified in conf/plugin.yml
-    private static final IDP_PARAM = 'idp=security/idp-local.xml'
+    private static final IDP_PARAM = 'idp=localhost:default:entityId'
 
     // Curious this, as although the ignore says there's a bug, the 'loginLinkShouldSetBody' test looks to be doing
     // same test but with different expected outcome. Can this just be removed? (Leaving ignore for now.)
