@@ -1,7 +1,7 @@
 package org.grails.plugin.springsecurity.saml
 
 import grails.testing.mixin.integration.Integration
-import grails.transaction.Rollback
+import grails.gorm.transactions.Rollback
 import org.springframework.security.core.userdetails.UserDetails
 import spock.lang.Specification
 import test.TestUserRole

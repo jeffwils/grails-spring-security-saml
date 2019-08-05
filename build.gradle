@@ -95,7 +95,7 @@ dependencies {
     testCompile 'org.grails:grails-web-testing-support'
 
     integrationTestCompile 'org.grails.plugins:hibernate5'
-    integrationTestCompile 'org.hibernate:hibernate-core:5.1.5.Final'
+    integrationTestCompile 'org.hibernate:hibernate-core:5.4.0.Final'
 
     integrationTestRuntime 'com.h2database:h2'
     integrationTestRuntime 'com.zaxxer:HikariCP:2.7.4'
