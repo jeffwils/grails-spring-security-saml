@@ -12,18 +12,9 @@ import groovy.util.logging.Slf4j
  */
 @Slf4j('logger')
 class SamlSecurityService extends SpringSecurityService {
-    SpringSamlUserDetailsService userDetailsService
     def userCache
     static transactional = false
     def config
-
-    SpringSamlUserDetailsService getUserDetailsService() {
-        return userDetailsService
-    }
-
-    void setUserDetailsService(SpringSamlUserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService
-    }
 
     Object getCurrentUser() {
         logger.debug("SamlSecurityService getCurrentUser")

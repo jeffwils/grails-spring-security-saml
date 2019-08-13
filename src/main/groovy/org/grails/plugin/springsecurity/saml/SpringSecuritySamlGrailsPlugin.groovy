@@ -391,7 +391,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 grailsApplication = grailsApplication //(GrailsApplication)ref('grailsApplication')
                 passwordEncoder = ref('passwordEncoder')
                 objectDefinitionSource = ref('objectDefinitionSource')
-                userDetailsService = ref('userDetailsService')
+                //userDetailsService = ref('userDetailsService')
                 userCache = ref('userCache')
             }
 

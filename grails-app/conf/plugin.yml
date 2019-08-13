@@ -3,7 +3,7 @@ grails:
         springsecurity:
             saml:
                 userAttributeMappings: {}
-                active: true
+                active: false
                 afterLoginUrl: '/'
                 afterLogoutUrl: '/'
                 userGroupAttribute: 'memberOf'
