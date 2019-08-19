@@ -20,7 +20,7 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "4.0.0-SNAPSHOT"
+version "4.0.0"
 group "org.grails.plugins"
 
 //apply plugin: 'maven-publish'
