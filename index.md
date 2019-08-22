@@ -17,7 +17,7 @@ compile "org.springframework.boot:spring-boot-starter-security"
 The security auto configuration of spring boot is disabled by default.
 However this plugin has a dependency on spring-security-config which may automatically
 activate the configuration. It must be disabled to prevent it from interfering
-the grails framework which installs it's own filters.
+the grails framework which installs its own filters.
 
 ```
 package app
