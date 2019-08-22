@@ -12,6 +12,29 @@ The spring security starter must be added to your build.gradle
 compile "org.springframework.boot:spring-boot-starter-security"
 ```
 
+#### Prevent SecurityFilterAutoConfiguration
+
+The security auto configuration of spring boot is disabled by default.
+However this plugin has a dependency on spring-security-config which may automatically
+activate the configuration. It must be disabled to prevent it from interfering
+the grails framework which installs it's own filters.
+
+```
+package app
+
+import grails.boot.GrailsApp
+import grails.boot.config.GrailsAutoConfiguration
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration
+
+@EnableAutoConfiguration(exclude = [SecurityFilterAutoConfiguration])
+class Application extends GrailsAutoConfiguration {
+    static void main(String[] args) {
+        GrailsApp.run(Application, args)
+    }
+}
+```
+
 #### Spring Security Classes
 The plugin requires that the Spring Security Classes that are created with the s2-quickstart, are present in your application.
 To run s2-quickstart, see [s2-quickstart](https://grails-plugins.github.io/grails-spring-security-core/v3/#s2-quickstart)

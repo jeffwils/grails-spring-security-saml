@@ -395,6 +395,12 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 userCache = ref('userCache')
             }
 
+            //https://github.com/jeffwils/grails-spring-security-saml/issues/63
+            //remove beans from SecurityFilterAutoConfiguration.java
+            //by overriding them with an empty string
+            springSecurityFilterChain(String, "")
+            securityFilterChainRegistration(String, "")
+
             println '...finished configuring Spring Security SAML'
         }
 
