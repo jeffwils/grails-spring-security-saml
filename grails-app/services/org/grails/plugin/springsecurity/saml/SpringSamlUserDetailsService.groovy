@@ -90,11 +90,11 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                             logger.error "Error: ${e.message}", e
                             def samlValue = credential.getAttributeAsString(value)
                             if (samlValue) {
-                                samlAttributes[key] = samlValue
+                                samlAttributes."$key" = samlValue
                             }
                         }
                     }
-                    userDetails.setAttributes(samlAttributes)
+                    userDetails.setSamlAttributes(samlAttributes)
                 }
 
                 return userDetails
