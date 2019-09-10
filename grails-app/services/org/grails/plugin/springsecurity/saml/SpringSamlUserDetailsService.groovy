@@ -24,6 +24,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.saml.SAMLCredential
 import org.springframework.security.saml.userdetails.SAMLUserDetailsService
+import grails.plugin.springsecurity.SpringSecurityUtils
+import org.springframework.security.core.userdetails.UserDetails
+import groovy.lang.MissingPropertyException
 
 /**
  * A {@link GormUserDetailsService} extension to read attributes from a LDAP-backed
@@ -77,6 +80,22 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                 logger.debug("User - id ${user?.id}")
                 def userDetails = createUserDetails(user, grantedAuthorities)
                 logger.debug("User Details ${userDetails.toString()}")
+                if(userDetails instanceof SamlUserDetails) {
+                    def samlAttributes = [:]
+                    samlUserAttributeMappings.each { key, value ->
+                        try {
+                            samlAttributes."$key" = user."$key"
+                        } catch(MissingPropertyException e) {
+                            logger.warn("Failed to get SAML attribute '$key' from ${user.getClass()}. Add the SAML attribute to your User domain class.")
+                            logger.error "Error: ${e.message}", e
+                            def samlValue = credential.getAttributeAsString(value)
+                            if (samlValue) {
+                                samlAttributes[key] = samlValue
+                            }
+                        }
+                    }
+                    userDetails.setAttributes(samlAttributes)
+                }
 
                 return userDetails
             } else {
@@ -280,5 +299,36 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         logger.debug("Loaded UserClass: ${userClass}")
 
         userClass
+    }
+
+    protected UserDetails createUserDetails(user, Collection<GrantedAuthority> authorities) {
+        def conf = SpringSecurityUtils.securityConfig
+
+        String usernamePropertyName = conf.userLookup.usernamePropertyName
+        String passwordPropertyName = conf.userLookup.passwordPropertyName
+        String enabledPropertyName = conf.userLookup.enabledPropertyName
+        String accountExpiredPropertyName = conf.userLookup.accountExpiredPropertyName
+        String accountLockedPropertyName = conf.userLookup.accountLockedPropertyName
+        String passwordExpiredPropertyName = conf.userLookup.passwordExpiredPropertyName
+
+        String username = user."$usernamePropertyName"
+        String password = user."$passwordPropertyName"
+        boolean enabled = enabledPropertyName ? user."$enabledPropertyName" : true
+        boolean accountExpired = accountExpiredPropertyName ? user."$accountExpiredPropertyName" : false
+        boolean accountLocked = accountLockedPropertyName ? user."$accountLockedPropertyName" : false
+        boolean passwordExpired = passwordExpiredPropertyName ? user."$passwordExpiredPropertyName" : false
+
+        def samlAttributes = [:]
+        samlUserAttributeMappings.each { key, value ->
+            try {
+                samlAttributes."$key" = user."$key"
+            } catch(MissingPropertyException e) {
+                logger.warn("Failed to get SAML attribute '$key' from ${user.getClass()}. Add the SAML attribute to your User domain class.")
+                logger.error "Error: ${e.message}", e
+            }
+        }
+
+        new SamlUserDetails(username, password, enabled, !accountExpired, !passwordExpired,
+            !accountLocked, authorities, user.id, samlAttributes)
     }
 }

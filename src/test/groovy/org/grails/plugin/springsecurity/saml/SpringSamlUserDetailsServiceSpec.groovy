@@ -72,7 +72,7 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             def user = service.loadUserBySAML(credential)
 
         expect:
-            user instanceof GrailsUser
+            user instanceof SamlUserDetails
     }
 
     void "loadUserBySAML should return NameID as the username when no mapping specified"() {
@@ -156,6 +156,63 @@ class SpringSamlUserDetailsServiceSpec  extends Specification implements Service
             samlUser.firstName == firstname
     }
 
+    void "loadUserBySAML should set additional mapped attributes on the user and pass them on to the user details"() {
+        given:
+            def emailAddress = "test@mailinator.com"
+            def firstname = "Jack"
+            service.samlAutoCreateActive = true
+            service.samlAutoCreateKey = 'username'
+
+            service.samlUserAttributeMappings = [email: "$MAIL_ATTR_NAME", firstName: "$FIRSTNAME_ATTR_NAME"]
+            setMockSamlAttributes(credential, ["$USERNAME_ATTR_NAME": username, "$MAIL_ATTR_NAME": emailAddress, "$FIRSTNAME_ATTR_NAME": firstname])
+
+        when:
+            def user = service.loadUserBySAML(credential)
+            def samlUser = TestSamlUser.findByUsername(username)
+
+        then:
+            samlUser.email == emailAddress
+            samlUser.firstName == firstname
+            user.email == samlUser.email
+            user.firstName == samlUser.firstName
+    }
+
+    void "loadUserBySAML should set additional mapped attributes on the user details without saving the user"() {
+        given:
+            def emailAddress = "test@mailinator.com"
+            def firstname = "Jack"
+            service.samlAutoCreateActive = false
+            service.samlAutoCreateKey = 'username'
+
+            service.samlUserAttributeMappings = [email: "$MAIL_ATTR_NAME", firstName: "$FIRSTNAME_ATTR_NAME"]
+            setMockSamlAttributes(credential, ["$USERNAME_ATTR_NAME": username, "$MAIL_ATTR_NAME": emailAddress, "$FIRSTNAME_ATTR_NAME": firstname])
+
+        when:
+            def user = service.loadUserBySAML(credential)
+            def samlUser = TestSamlUser.findByUsername(username)
+        then:
+            user.email == emailAddress
+            user.firstName == firstname
+            samlUser == null
+    }
+
+    void "loadUserBySAML should use default attributes on the user details if they are missing from the saml response"() {
+        given:
+            def emailAddress = "test@mailinator.com"
+            def firstname = "Jack"
+            service.samlAutoCreateActive = false
+            service.samlAutoCreateKey = 'username'
+
+            service.samlUserAttributeMappings = [email: "$MAIL_ATTR_NAME", firstName: "$FIRSTNAME_ATTR_NAME"]
+            setMockSamlAttributes(credential, ["$USERNAME_ATTR_NAME": username, "$MAIL_ATTR_NAME": emailAddress])
+
+        when:
+            def user = service.loadUserBySAML(credential)
+            def samlUser = TestSamlUser.findByUsername(username)
+        then: "no missing property exception will occur"
+            user.email == emailAddress
+            user.firstName == null
+    }
 
     void "loadUserBySAML should not persist a user that already exists"() {
         given:
