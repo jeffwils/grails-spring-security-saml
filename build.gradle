@@ -140,6 +140,7 @@ dependencies {
 
 jar {
     exclude 'test/**'
+    exclude "UrlMappings**"
     exclude 'security/keystore.jks'
     exclude 'security/sp.xml'
     exclude 'security/idp-local.xml'
