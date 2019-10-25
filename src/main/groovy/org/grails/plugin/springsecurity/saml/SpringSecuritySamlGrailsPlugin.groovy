@@ -65,7 +65,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     def pluginExcludes = [
             'test/**',
             "grails-app/views/error.gsp",
-            "grails-app/controllers/UrlMappings.groovy",
+            "UrlMappings",
             'docs/**',
             'scripts/PublishGithub.groovy'
     ]
