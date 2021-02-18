@@ -360,11 +360,14 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                     ref('artifactResolutionProfile')
             )
 
-            artifactResolutionProfile(ArtifactResolutionProfileImpl, ref('httpClient')) {
+            artifactResolutionProfile(ArtifactResolutionProfileImpl, ref('artifactResolutionProfileHttpClient')) {
                 processor = ref('soapProcessor')
             }
 
-            httpClient(HttpClient)
+            artifactResolutionProfileHttpClient(HttpClient)
+            if(conf.oldhttp) {
+                httpClient(HttpClient)
+            }
 
             soapProcessor(SAMLProcessorImpl, ref('soapBinding'))
 

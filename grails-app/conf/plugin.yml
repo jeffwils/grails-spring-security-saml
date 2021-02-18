@@ -2,6 +2,7 @@ grails:
     plugin:
         springsecurity:
             saml:
+                oldhttp: true
                 userAttributeMappings: {}
                 active: true
                 afterLoginUrl: '/'

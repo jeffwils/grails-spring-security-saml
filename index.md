@@ -74,6 +74,7 @@ All of these properties can be put in either `application.yml` or `application.g
 
 | Property | Syntax | Example Value | Description |
 |--------|------|-------------|-----------|
+| oldhttp | boolean | true | When set to false the obsolete httpBean will be disabled |
 | active | boolean | true | States whether or not SAML is active |
 | afterLoginUrl | url string | '/' | Redirection Url in your application upon successful login from the IDP |
 | afterLogoutUrl | url string | '/' | Redirection Url in your application upon successful logout from the IDP |
