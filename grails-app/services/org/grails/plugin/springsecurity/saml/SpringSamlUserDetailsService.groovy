@@ -66,12 +66,12 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
             logger.debug("Generated User ${user.username}")
             user = mapAdditionalAttributes(credential, user)
             if (user) {
-                def grantedAuthorities = getAuthoritiesForUser(credential, username)
+                def grantedAuthorities = getAuthoritiesForUser(credential, user)
                 if (samlAutoCreateActive) {
                     user = saveUser(user.class, user, grantedAuthorities)
                     // load any new local DB roles
                     grantedAuthorities.addAll(
-                        determineLocalRoles( username )
+                        determineLocalRoles( user )
                     )
                 }
 
@@ -127,13 +127,13 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         user
     }
 
-    protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
+    protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, user) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
-        logger.debug "Determining Authorities for $username"
+        logger.debug "Determining Authorities for $user"
         if (samlUseLocalRoles) {
             authorities.addAll(
-                determineLocalRoles(username)
+                determineLocalRoles(user)
             )
 
         }
@@ -169,13 +169,12 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         authorities
     }
 
-    private Set<SimpleGrantedAuthority> determineLocalRoles( String username ) {
-        logger.debug( 'Using role assignments from local database.' )
+    private Set<SimpleGrantedAuthority> determineLocalRoles( user ) {
+        logger.debug( 'Using role assignments from local database .' )
 
         Set<SimpleGrantedAuthority> authorities = new HashSet<>()
-        def user = userClass.findByUsername( username )
         if( user ) {
-            loadAuthorities( user, username, true ).each { authority ->
+            loadAuthorities( user, user.username, true ).each { authority ->
                 authorities.add(
                     new SimpleGrantedAuthority( authority.authority )
                 )
@@ -183,7 +182,7 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
             logger.debug( "Added ${authorities.size()} role(s) from local database." )
         }
         else {
-            logger.debug( "User $username does not exist in local database, unable to load local roles.")
+            logger.debug( "User ${user.username} does not exist in local database, unable to load local roles.")
         }
 
         authorities

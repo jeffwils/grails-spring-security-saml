@@ -11,6 +11,7 @@ buildscript {
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:3.1.1"
         classpath "io.spring.gradle:dependency-management-plugin:0.5.2.RELEASE"
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.9.6"
     }
 }
 
@@ -20,7 +21,7 @@ plugins {
     id "com.jfrog.artifactory" version "3.1.1"
 }
 
-version "4.0.2"
+version "4.0.3"
 group "org.grails.plugins"
 
 //apply plugin: 'maven-publish'
