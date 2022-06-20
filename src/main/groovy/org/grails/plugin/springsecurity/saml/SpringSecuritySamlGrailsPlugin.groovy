@@ -14,35 +14,69 @@ import org.springframework.security.web.authentication.SavedRequestAwareAuthenti
 import org.springframework.security.web.authentication.logout.SimpleUrlLogoutSuccessHandler
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler
 import org.springframework.security.web.authentication.session.SessionFixationProtectionStrategy
-import org.springframework.security.saml.SAMLEntryPoint
-import org.springframework.security.saml.SAMLProcessingFilter
-import org.springframework.security.saml.SAMLLogoutFilter
-import org.springframework.security.saml.SAMLLogoutProcessingFilter
-import org.springframework.security.saml.websso.WebSSOProfileOptions
-import org.springframework.security.saml.websso.WebSSOProfileConsumerImpl
-import org.springframework.security.saml.websso.WebSSOProfileImpl
-import org.springframework.security.saml.websso.WebSSOProfileECPImpl
-import org.springframework.security.saml.websso.SingleLogoutProfileImpl
-import org.springframework.security.saml.websso.ArtifactResolutionProfileImpl
-import org.springframework.security.saml.processor.HTTPPostBinding
-import org.springframework.security.saml.processor.HTTPRedirectDeflateBinding
-import org.springframework.security.saml.processor.HTTPArtifactBinding
-import org.springframework.security.saml.processor.HTTPSOAP11Binding
-import org.springframework.security.saml.processor.HTTPPAOS11Binding
-import org.springframework.security.saml.processor.SAMLProcessorImpl
-import org.springframework.security.saml.metadata.ExtendedMetadata
-import org.springframework.security.saml.metadata.ExtendedMetadataDelegate
-import org.springframework.security.saml.metadata.MetadataDisplayFilter
-import org.springframework.security.saml.metadata.MetadataGenerator
-import org.springframework.security.saml.metadata.CachingMetadataManager
-import org.springframework.security.saml.log.SAMLDefaultLogger
-import org.springframework.security.saml.key.JKSKeyManager
-import org.springframework.security.saml.util.VelocityFactory
-import org.springframework.security.saml.context.SAMLContextProviderImpl
-import org.opensaml.saml2.metadata.provider.FilesystemMetadataProvider
-import org.opensaml.saml2.metadata.provider.HTTPMetadataProvider
-import org.opensaml.xml.parse.BasicParserPool
-import org.apache.commons.httpclient.HttpClient
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.servlet.Filter;
+import org.opensaml.core.Version;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.saml2.provider.service.authentication.AbstractSaml2AuthenticationRequest;
+import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider;
+import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationRequestFactory;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationRequestFactory;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
+import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrations
+
+import org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationFilter;
+import org.springframework.security.saml2.provider.service.servlet.filter.Saml2WebSsoAuthenticationRequestFilter;
+import org.springframework.security.saml2.provider.service.web.DefaultRelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.DefaultSaml2AuthenticationRequestContextResolver;
+import org.springframework.security.saml2.provider.service.web.HttpSessionSaml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationResolver;
+import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestContextResolver;
+import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationRequestRepository;
+import org.springframework.security.saml2.provider.service.web.Saml2AuthenticationTokenConverter;
+import org.springframework.security.web.authentication.AuthenticationConverter;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+import org.springframework.security.saml2.provider.service.registration.InMemoryRelyingPartyRegistrationRepository
+import org.springframework.security.saml2.core.Saml2X509Credential
+import java.security.KeyStore
+import java.security.KeyStore.PrivateKeyEntry
+import java.security.KeyStore.PasswordProtection
+import org.opensaml.security.x509.X509Support
+import java.security.cert.X509Certificate
+import org.springframework.security.saml2.provider.service.metadata.OpenSamlMetadataResolver
+import org.springframework.security.saml2.provider.service.web.Saml2MetadataFilter
+
+import org.springframework.security.web.authentication.logout.LogoutHandler
+import org.springframework.security.web.util.matcher.AndRequestMatcher
+import javax.servlet.http.HttpServletRequest
+import java.util.function.Predicate
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutResponseValidator;
+import org.springframework.security.saml2.provider.service.authentication.logout.OpenSamlLogoutRequestValidator;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml3LogoutRequestResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.HttpSessionLogoutRequestRepository;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.OpenSaml3LogoutResponseResolver;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutRequestFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2LogoutResponseFilter;
+import org.springframework.security.saml2.provider.service.web.authentication.logout.Saml2RelyingPartyInitiatedLogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessEventPublishingLogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import java.net.MalformedURLException
 
 class SpringSecuritySamlGrailsPlugin extends Plugin {
 
@@ -74,7 +108,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
     def developers = [[ name: "Alvaro Sanchez-Mariscal", email: "alvaro.sanchez@salenda.es" ], [ name: "Feroz Panwaskar", email: "feroz.panwaskar@gmail.com" ],[ name: "Feroz Panwaskar", email: "feroz.panwaskar@gmail.com" ], [ name: "Jeff Beck", email: "beckje01@gmail.com" ], [ name: "Sphoorti Acharya", email: "sphoortiacharya@gmail.com" ]]
 
 
-    def providers = []
+    def registrations = []
 
     Closure doWithSpring() {
         {->
@@ -84,22 +118,13 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
 
             println 'Configuring Spring Security SAML ...'
 
-            //Due to Spring DSL limitations, need to import these beans as XML definitions
-            def beansFile = "classpath:security/springSecuritySamlBeans.xml"
-            println "Importing beans from ${beansFile}..."
-            delegate.importBeans beansFile
-
-            xmlns context:"http://www.springframework.org/schema/context"
-            context.'annotation-config'()
-            context.'component-scan'('base-package': "org.springframework.security.saml")
-
             SpringSecurityUtils.registerProvider 'samlAuthenticationProvider'
             SpringSecurityUtils.registerLogoutHandler 'logoutHandler'
-            SpringSecurityUtils.registerFilter 'samlEntryPoint', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 1
-            SpringSecurityUtils.registerFilter 'metadataFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 2
-            SpringSecurityUtils.registerFilter 'samlProcessingFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 3
-            SpringSecurityUtils.registerFilter 'samlLogoutFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 4
-            SpringSecurityUtils.registerFilter 'samlLogoutProcessingFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 5
+            SpringSecurityUtils.registerFilter 'saml2WebSsoAuthenticationFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 1
+            SpringSecurityUtils.registerFilter 'saml2AuthenticationRequestFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 2
+            SpringSecurityUtils.registerFilter 'saml2LogoutRequestFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 3
+            SpringSecurityUtils.registerFilter 'saml2LogoutResponseFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 4
+            SpringSecurityUtils.registerFilter 'relyingPartyLogoutFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 6
 
             successRedirectHandler(SavedRequestAwareAuthenticationSuccessHandler) {
                 alwaysUseDefaultTargetUrl = conf.saml.alwaysUseAfterLoginUrl ?: false
@@ -110,186 +135,20 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 defaultTargetUrl = conf.saml.afterLogoutUrl
             }
 
-            SAMLLogger(SAMLDefaultLogger)
+            def storePass = conf.saml.keyManager.storePass.toCharArray()
+            def keystore = loadKeystore(getResource(conf.saml.keyManager.storeFile), storePass)
+            String signingKey = conf.saml.metadata.sp.defaults.signingKey
+            String verificationKey = conf.saml.metadata.sp.defaults.verificationKey ?: signingKey
 
-            if(!getResource(conf.saml.keyManager.storeFile).exists()) {
-                throw new IOException("Keystore cannot be loaded from file '${conf.saml.keyManager.storeFile}'. " +
-                         "Please check that the path configured in " +
-                         "'grails.plugin.springsecurity.saml.keyManager.storeFile' in your application.yml is correct.")
-            }
-
-            keyManager(JKSKeyManager,
-                    conf.saml.keyManager.storeFile, conf.saml.keyManager.storePass, conf.saml.keyManager.passwords, conf.saml.keyManager.defaultKey)
-
-            def idpSelectionPath = conf.saml.entryPoint.idpSelectionPath
-            samlEntryPoint(SAMLEntryPoint) {
-                filterProcessesUrl = conf.auth.loginFormUrl 						// '/saml/login'
-                if (idpSelectionPath) {
-                    idpSelectionPath = idpSelectionPath 					// '/index.gsp'
-                }
-                defaultProfileOptions = ref('webProfileOptions')
-            }
-
-            webProfileOptions(WebSSOProfileOptions) {
-                includeScoping = false
-            }
-
-            metadataFilter(MetadataDisplayFilterUTF8) {
-                filterProcessesUrl = conf.saml.metadata.url 						// '/saml/metadata'
-            }
-
-            metadataGenerator(MetadataGenerator)
-
-            // TODO: Update to handle any type of meta data providers for default to file based instead http provider.
             log.debug "Dynamically defining bean metadata providers... "
-            def providerBeanName = "extendedMetadataDelegate"
-            conf.saml.metadata.providers.each {k,v ->
-
-                println "Registering metadata key: ${k} and value: $v"
-                "${providerBeanName}"(ExtendedMetadataDelegate) { extMetaDataDelegateBean ->
-
-                    metadataTrustCheck = false
-                    metadataRequireSignature = false
-
-                    if(v.startsWith("https:") || v.startsWith("http:")) {
-                        def timeout = conf.saml.metadata.timeout
-                        def url = v
-                        httpMetadataProvider(HTTPMetadataProvider, url, timeout) { bean ->
-                            parserPool = ref('parserPool')
-                        }
-                        extMetaDataDelegateBean.constructorArgs = [ref('httpMetadataProvider'), new ExtendedMetadata()]
-                    } else {
-                        filesystemMetadataProvider(FilesystemMetadataProvider) { bean ->
-                            if (v.startsWith("/") || v.indexOf(':') == 1) {
-                                File resource = new File(v)
-                                bean.constructorArgs = [resource]
-                            } else {
-                                def resource = new ClassPathResource(v)
-                                if(!resource.exists()) {
-                                    throw new IOException("Identity provider metadata cannot be loaded from file '${v}'. " +
-                                             "Please check that the path configured in " +
-                                             "'grails.plugin.springsecurity.saml.providers.${k}' in your application.yml is correct.")
-                                }
-                                try {
-                                    bean.constructorArgs = [resource.getFile()]
-                                } catch (FileNotFoundException fe) {
-                                    final InputStream is = resource.getInputStream();
-                                    try {
-                                        final InputStreamReader reader = new InputStreamReader(is);
-                                        try {
-                                            final Document headerDoc = new SAXBuilder().build(reader);
-                                            XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-                                            String xmlString = outputter.outputString(headerDoc);
-                                            File temp = File.createTempFile("idp-local",".xml");
-                                            BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-                                            bw.write(xmlString);
-                                            bw.close();
-                                            bean.constructorArgs = [temp]
-                                            temp.deleteOnExit();
-                                        } finally {
-                                            reader.close();
-                                        }
-                                    } finally {
-                                        is.close();
-                                    }
-                                }
-                            }
-                            parserPool = ref('parserPool')
-                        }
-
-                        extMetaDataDelegateBean.constructorArgs = [ref('filesystemMetadataProvider'), new ExtendedMetadata()]
-                    }
-                }
-
-                providers << ref(providerBeanName)
+            def providers = conf.saml.metadata.providers
+            providers.each { registrationId, metadataLocation ->
+                println "Registering registrationId ${registrationId} from ${metadataLocation}"
+                registrations << registrationFromMetadata(conf, registrationId, metadataLocation, keystore)
             }
-
-    // you can only define a single service provider configuration
-            def spFile = conf.saml.metadata.sp.file
-            def defaultSpConfig = conf.saml.metadata.sp.defaults
-            if (spFile) {
-                println "Loading the service provider metadata from ${spFile}..."
-                spMetadata(ExtendedMetadataDelegate) { spMetadataBean ->
-                    spMetadataProvider(FilesystemMetadataProvider) { spMetadataProviderBean ->
-                        if (spFile.startsWith("/") || spFile.indexOf(':') == 1) {
-                            File spResource = new File(spFile)
-                            spMetadataProviderBean.constructorArgs = [spResource]
-                        }else{
-                            def spResource = new ClassPathResource(spFile)
-                            if(!spResource.exists()) {
-                                throw new IOException("Service provider metadata cannot be loaded from file '${spFile}'. " +
-                                         "Please check that the path configured in " +
-                                         "'grails.plugin.springsecurity.saml.metadata.sp.file' in your application.yml is correct.")
-                            }
-                            try{
-                                spMetadataProviderBean.constructorArgs = [spResource.getFile()]
-                            } catch(FileNotFoundException fe){
-                                final InputStream is = spResource.getInputStream();
-                                try {
-                                    final InputStreamReader reader = new InputStreamReader(is);
-                                    try {
-                                        final Document headerDoc = new SAXBuilder().build(reader);
-                                        XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
-                                        String xmlString = outputter.outputString(headerDoc);
-                                        File temp = File.createTempFile("sp-local",".xml");
-                                        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
-                                        bw.write(xmlString);
-                                        bw.close();
-                                        spMetadataProviderBean.constructorArgs = [temp]
-                                        temp.deleteOnExit();
-                                    } finally {
-                                        reader.close();
-                                    }
-                                } finally {
-                                    is.close();
-                                }
-                            }
-                        }
-
-                        parserPool = ref('parserPool')
-                    }
-
-                    //TODO consider adding idp discovery default
-                    spMetadataDefaults(ExtendedMetadata) { extMetadata ->
-                        local = defaultSpConfig."local"
-                        alias = defaultSpConfig."alias"
-                        securityProfile = defaultSpConfig."securityProfile"
-                        signingKey = defaultSpConfig."signingKey"
-                        encryptionKey = defaultSpConfig."encryptionKey"
-                        tlsKey = defaultSpConfig."tlsKey"
-                        requireArtifactResolveSigned = defaultSpConfig."requireArtifactResolveSigned"
-                        requireLogoutRequestSigned = defaultSpConfig."requireLogoutRequestSigned"
-                        requireLogoutResponseSigned = defaultSpConfig."requireLogoutResponseSigned"
-                    }
-
-                    spMetadataBean.constructorArgs = [ref('spMetadataProvider'), ref('spMetadataDefaults')]
-                }
-
-                providers << ref('spMetadata')
-            }
-
-            metadata(CachingMetadataManager) { metadataBean ->
-                // At this point, due to Spring DSL limitations, only one provider
-                // can be defined so just picking the first one
-                metadataBean.constructorArgs = [providers.first()]
-                providers = providers
-
-                if (defaultSpConfig?."entityId") {
-                    hostedSPName = defaultSpConfig?."entityId"
-                } else {
-                    if (defaultSpConfig?."alias") {
-                        hostedSPName = defaultSpConfig?."alias"
-                    }
-                }
-                if(conf.saml.metadata?.defaultIdp != '') {
-                    defaultIDP = conf.saml.metadata?.defaultIdp
-                }
-            }
-
-
 
             userDetailsService(SpringSamlUserDetailsService) {
-                grailsApplication = grailsApplication //(GrailsApplication)ref('grailsApplication')
+                grailsApplication = grailsApplication
                 authorityClassName = conf.authority.className
                 authorityJoinClassName = conf.userLookup.authorityJoinClassName
                 authorityNameField = conf.authority.nameField
@@ -302,18 +161,12 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 userDomainClassName = conf.userLookup.userDomainClassName
             }
 
-            samlAuthenticationProvider(GrailsSAMLAuthenticationProvider) {
-                userDetails = ref('userDetailsService')
-                hokConsumer = ref('webSSOprofileConsumer')
+            samlResponseAuthenticationConverter(SamlResponseAuthenticationConverter) {
+                userDetailsService = ref('userDetailsService')
             }
 
-            contextProvider(SAMLContextProviderImpl)
-
-            samlProcessingFilter(SAMLProcessingFilter) {
-                authenticationManager = ref('authenticationManager')
-                authenticationSuccessHandler = ref('successRedirectHandler')
-                sessionAuthenticationStrategy = ref('sessionFixationProtectionStrategy')
-                authenticationFailureHandler = ref('authenticationFailureHandler')
+            samlAuthenticationProvider(OpenSamlAuthenticationProvider) {
+                responseAuthenticationConverter = ref('samlResponseAuthenticationConverter')
             }
 
             authenticationFailureHandler(AjaxAwareAuthenticationFailureHandler) {
@@ -322,63 +175,62 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 useForward = conf.failureHandler.useForward // false
                 ajaxAuthenticationFailureUrl = conf.failureHandler.ajaxAuthFailUrl // '/login/authfail?ajax=true'
                 exceptionMappings = conf.failureHandler.exceptionMappings // [:]
+                allowSessionCreation = conf.failureHandler.allowSessionCreation // true
             }
-
             redirectStrategy(DefaultRedirectStrategy) {
                 contextRelative = conf.redirectStrategy.contextRelative // false
             }
-
             sessionFixationProtectionStrategy(SessionFixationProtectionStrategy)
 
             logoutHandler(SecurityContextLogoutHandler) {
                 invalidateHttpSession = true
             }
-
-            samlLogoutFilter(SAMLLogoutFilter,
-                    ref('logoutSuccessHandler'), ref('logoutHandler'), ref('logoutHandler'))
-
-            samlLogoutProcessingFilter(SAMLLogoutProcessingFilter,
-                    ref('logoutSuccessHandler'), ref('logoutHandler'))
-
-            webSSOprofileConsumer(WebSSOProfileConsumerImpl){
-                responseSkew = conf.saml.responseSkew
+            springSecurityService(SamlSecurityService) {
+                config = conf
+                authenticationTrustResolver = ref('authenticationTrustResolver')
+                grailsApplication = grailsApplication
+                passwordEncoder = ref('passwordEncoder')
+                objectDefinitionSource = ref('objectDefinitionSource')
+                userDetailsService = ref('userDetailsService')
+                userCache = ref('userCache')
             }
 
-            webSSOprofile(WebSSOProfileImpl)
+            relyingPartyRegistrationRepository(InMemoryRelyingPartyRegistrationRepository, registrations)
 
-            ecpprofile(WebSSOProfileECPImpl)
+            relyingPartyRegistrationRepositoryResolver(DefaultRelyingPartyRegistrationResolver, ref('relyingPartyRegistrationRepository'))
 
-            logoutprofile(SingleLogoutProfileImpl)
+            def defaultRegistrationId = null
+            if(conf.saml.metadata.defaultIdp && conf.saml.metadata.sp.defaults.assertionConsumerService) {
+                String loginProcessingUrl = null
+                try {
+                    loginProcessingUrl = new URL(conf.saml.metadata.sp.defaults.assertionConsumerService).getPath()
+                } catch(MalformedURLException e) {
+                    println "Failed to get path from URL ${conf.saml.metadata.sp.defaults.assertionConsumerService}"
+                }
+                if (loginProcessingUrl != null) {
+                    println "Activating default registration ${conf.saml.metadata.defaultIdp}"
+                    defaultRegistrationId = (registrations
+                        .find{ it.assertingPartyDetails.entityId == conf.saml.metadata.defaultIdp }.registrationId
+                        ?: conf.saml.metadata.defaultIdp)
 
-            postBinding(HTTPPostBinding, ref('parserPool'), ref('velocityEngine'))
+                    // force the use of defaultIdp registration
+                    defaultIdpRegistrationRepositoryResolver(DefaultRegistrationResolver) {
+                        relyingPartyRegistrationResolver = ref('relyingPartyRegistrationRepositoryResolver')
+                        defaultRegistration = defaultRegistrationId
+                    }
 
-            redirectBinding(HTTPRedirectDeflateBinding, ref('parserPool'))
+                    defaultIdpAuthenticationConverter(Saml2AuthenticationTokenConverter, ref('defaultIdpRegistrationRepositoryResolver'))
 
-            artifactBinding(HTTPArtifactBinding,
-                    ref('parserPool'),
-                    ref('velocityEngine'),
-                    ref('artifactResolutionProfile')
-            )
-
-            artifactResolutionProfile(ArtifactResolutionProfileImpl, ref('httpClient')) {
-                processor = ref('soapProcessor')
+                    defaultIdpSaml2WebSsoAuthenticationFilter(Saml2WebSsoAuthenticationFilter, ref('defaultIdpAuthenticationConverter'), loginProcessingUrl) {
+                        authenticationRequestRepository = ref('authenticationRequestRepository')
+                        authenticationManager = ref('authenticationManager')
+                        sessionAuthenticationStrategy = ref('sessionFixationProtectionStrategy')
+                        authenticationSuccessHandler = ref('successRedirectHandler')
+                        authenticationFailureHandler = ref('authenticationFailureHandler')
+                    }
+                    SpringSecurityUtils.registerFilter 'defaultIdpSaml2WebSsoAuthenticationFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 5
+                }
             }
-
-            httpClient(HttpClient)
-
-            soapProcessor(SAMLProcessorImpl, ref('soapBinding'))
-
-            soapBinding(HTTPSOAP11Binding, ref('parserPool'))
-
-            paosBinding(HTTPPAOS11Binding, ref('parserPool'))
-
-            bootStrap(CustomSAMLBootstrap)
-
-            velocityEngine(VelocityFactory) { bean ->
-                bean.factoryMethod = "getEngine"
-            }
-
-            parserPool(BasicParserPool)
 
             securityTagLib(SamlTagLib) {
                 springSecurityService = ref('springSecurityService')
@@ -386,25 +238,161 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
                 webInvocationPrivilegeEvaluator = ref('webInvocationPrivilegeEvaluator')
             }
 
-            springSecurityService(SamlSecurityService) {
-                config = conf
-                authenticationTrustResolver = ref('authenticationTrustResolver')
-                grailsApplication = grailsApplication //(GrailsApplication)ref('grailsApplication')
-                passwordEncoder = ref('passwordEncoder')
-                objectDefinitionSource = ref('objectDefinitionSource')
-                userDetailsService = ref('userDetailsService')
-                userCache = ref('userCache')
+            contextResolver(DefaultSaml2AuthenticationRequestContextResolver, ref('relyingPartyRegistrationRepositoryResolver'))
+            authenticationConverter(Saml2AuthenticationTokenConverter, ref('relyingPartyRegistrationRepositoryResolver'))
+
+            openSamlMetadataResolver(OpenSamlMetadataResolver)
+
+            saml2MetadataFilter(Saml2MetadataFilter, ref('relyingPartyRegistrationRepositoryResolver'), ref('openSamlMetadataResolver'))
+
+            authenticationRequestRepository(HttpSessionSaml2AuthenticationRequestRepository)
+
+            authenticationRequestFactory(OpenSamlAuthenticationRequestFactory)
+
+            String loginProcessingUrl = "/login/saml2/sso/{registrationId}"
+            saml2WebSsoAuthenticationFilter(Saml2WebSsoAuthenticationFilter, ref('authenticationConverter'), loginProcessingUrl) {
+                authenticationRequestRepository = ref('authenticationRequestRepository')
+                authenticationManager = ref('authenticationManager')
+                sessionAuthenticationStrategy = ref('sessionFixationProtectionStrategy')
+                authenticationSuccessHandler = ref('successRedirectHandler')
+                authenticationFailureHandler = ref('authenticationFailureHandler')
             }
 
-            //https://github.com/jeffwils/grails-spring-security-saml/issues/63
-            //remove beans from SecurityFilterAutoConfiguration.java
-            //by overriding them with an empty string
-            springSecurityFilterChain(String, "")
-            securityFilterChainRegistration(String, "")
+            saml2AuthenticationRequestFilter(Saml2WebSsoAuthenticationRequestFilter, ref('contextResolver'), ref('authenticationRequestFactory')) {
+                authenticationRequestRepository = ref('authenticationRequestRepository')
+            }
+
+            String logoutUrl = "/logout/saml2"
+            String logoutResponseUrl = "/logout/saml2/slo";
+            String logoutRequestUrl = "/logout/saml2/slo";
+
+            logoutResponseValidator(OpenSamlLogoutResponseValidator)
+            logoutResponseResolver(OpenSaml3LogoutResponseResolver, ref('relyingPartyRegistrationRepositoryResolver'))
+
+            logoutRequestRepository(HttpSessionLogoutRequestRepository)
+            logoutRequestValidator(OpenSamlLogoutRequestValidator)
+            logoutRequestResolver(OpenSaml3LogoutRequestResolver, ref('relyingPartyRegistrationRepositoryResolver'))
+
+            LogoutHandler[] logoutHandlers = [
+                new SecurityContextLogoutHandler(),
+                new LogoutSuccessEventPublishingLogoutHandler()
+            ].toArray(new LogoutHandler[2]);
+
+            saml2LogoutRequestFilter(Saml2LogoutRequestFilter, ref('relyingPartyRegistrationRepositoryResolver'),
+                    ref('logoutRequestValidator'), ref('logoutResponseResolver'), logoutHandlers) {
+                logoutRequestMatcher = new AndRequestMatcher(
+                    new AntPathRequestMatcher(logoutRequestUrl),
+                    new ParameterRequestMatcher("SAMLRequest"))
+            }
+
+            saml2LogoutResponseFilter(Saml2LogoutResponseFilter, ref('relyingPartyRegistrationRepositoryResolver'),
+                    ref('logoutResponseValidator'), ref('logoutSuccessHandler')) {
+                logoutRequestMatcher = new AndRequestMatcher(
+                    new AntPathRequestMatcher(logoutResponseUrl),
+                    new ParameterRequestMatcher("SAMLResponse"))
+                logoutRequestRepository = ref('logoutRequestRepository')
+            }
+
+            def singleLogoutService = conf.saml.metadata.sp.defaults.singleLogoutService
+            def defaultIdp = conf.saml.metadata.defaultIdp
+            if(defaultIdp && singleLogoutService) {
+                String defaultIdpLogoutResponseUrl = null
+                try {
+                    defaultIdpLogoutResponseUrl = new URL(singleLogoutService).getPath()
+                } catch(MalformedURLException e) {
+                    println "Failed to get path from URL ${singleLogoutService}"
+                }
+                if (defaultIdpLogoutResponseUrl != null) {
+                    println "defaultIdpLogoutResponseUrl ${defaultIdpLogoutResponseUrl}"
+                    defaultIdpSaml2LogoutRequestFilter(Saml2LogoutRequestFilter, ref('relyingPartyRegistrationRepositoryResolver'),
+                            ref('logoutRequestValidator'), ref('logoutResponseResolver'), logoutHandlers) {
+                        logoutRequestMatcher = new AndRequestMatcher(
+                            new AntPathRequestMatcher(defaultIdpLogoutResponseUrl),
+                            new ParameterRequestMatcher("SAMLRequest"))
+                    }
+
+                    defaultIdpSaml2LogoutResponseFilter(Saml2LogoutResponseFilter, ref('relyingPartyRegistrationRepositoryResolver'),
+                            ref('logoutResponseValidator'), ref('logoutSuccessHandler')) {
+                        logoutRequestMatcher = new AndRequestMatcher(
+                            new AntPathRequestMatcher(defaultIdpLogoutResponseUrl),
+                            new ParameterRequestMatcher("SAMLResponse"))
+                        logoutRequestRepository = ref('logoutRequestRepository')
+                    }
+                    SpringSecurityUtils.registerFilter 'defaultIdpSaml2LogoutRequestFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 7
+                    SpringSecurityUtils.registerFilter 'defaultIdpSaml2LogoutResponseFilter', SecurityFilterPosition.SECURITY_CONTEXT_FILTER.order + 8
+                }
+            }
+
+            logoutRequestSuccessHandler(Saml2RelyingPartyInitiatedLogoutSuccessHandler, ref('logoutRequestResolver'))
+
+            relyingPartyLogoutFilter(LogoutFilter, ref('logoutRequestSuccessHandler'), logoutHandlers) {
+                logoutRequestMatcher = new AndRequestMatcher(
+                    new AntPathRequestMatcher(logoutUrl),
+                    new Saml2RequestMatcher())
+            }
 
             println '...finished configuring Spring Security SAML'
         }
+    }
 
+    private static class Saml2RequestMatcher implements RequestMatcher {
+
+        @Override
+        public boolean matches(HttpServletRequest request) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                return false;
+            }
+            return authentication.getPrincipal() instanceof Saml2AuthenticatedPrincipal;
+        }
+
+    }
+
+    private static class ParameterRequestMatcher implements RequestMatcher {
+
+        Predicate<String> test = Objects::nonNull;
+
+        String name;
+
+        ParameterRequestMatcher(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean matches(HttpServletRequest request) {
+            return this.test.test(request.getParameter(this.name));
+        }
+
+    }
+
+    KeyStore loadKeystore(resource, storePass) {
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType())
+        resource.URL.withInputStream { is ->
+            keystore.load(is, storePass)
+        }
+        return keystore
+    }
+
+    def registrationFromMetadata(conf, registrationId, metadataLocation, keystore) {
+
+        String relyingPartyEntityId = conf.saml.metadata.sp.defaults.entityID ?: "{baseUrl}/saml2/service-provider-metadata/{registrationId}"
+        String assertionConsumerServiceLocation = conf.saml.metadata.sp.defaults.assertionConsumerService ?: "{baseUrl}/login/saml2/sso/{registrationId}"
+        String relyingSingleLogoutServiceLocation = conf.saml.metadata.sp.defaults.singleLogoutService ?: "{baseUrl}/logout/saml2/sso/{registrationId}"
+
+        String signingKey = conf.saml.metadata.sp.defaults.signingKey
+        def entryPass = conf.saml.keyManager.passwords.getProperty(signingKey).toCharArray()
+        def signingEntry = (PrivateKeyEntry)keystore.getEntry(signingKey, new PasswordProtection(entryPass))
+        Saml2X509Credential relyingPartySigningCredential = new Saml2X509Credential(signingEntry.privateKey,
+            signingEntry.certificate, Saml2X509Credential.Saml2X509CredentialType.SIGNING, Saml2X509Credential.Saml2X509CredentialType.DECRYPTION)
+
+        return RelyingPartyRegistrations.fromMetadataLocation(metadataLocation)
+            .registrationId(registrationId)
+            .entityId(relyingPartyEntityId)
+            .assertionConsumerServiceLocation(assertionConsumerServiceLocation)
+            .singleLogoutServiceLocation(relyingSingleLogoutServiceLocation)
+            .signingX509Credentials((c) -> c.add(relyingPartySigningCredential))
+            .decryptionX509Credentials((c) -> c.add(relyingPartySigningCredential))
+            .build()
     }
 
     void doWithDynamicMethods() {
@@ -430,7 +418,7 @@ class SpringSecuritySamlGrailsPlugin extends Plugin {
         // TODO Implement code that is executed when the application shuts down (optional)
     }
 
-    private static boolean isActive( def conf ) {
+    private static boolean isActive(conf) {
         final PLUGIN_NOT_AVAILABLE = 'SAML plugin will not be available'
         if( !conf ) {
             // This is unlikely to ever occur due to default configs included in plugins,

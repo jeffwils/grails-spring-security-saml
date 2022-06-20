@@ -22,8 +22,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import org.springframework.security.saml.SAMLCredential
-import org.springframework.security.saml.userdetails.SAMLUserDetailsService
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal
 import grails.plugin.springsecurity.SpringSecurityUtils
 import org.springframework.security.core.userdetails.UserDetails
 import groovy.lang.MissingPropertyException
@@ -36,7 +35,7 @@ import groovy.lang.MissingPropertyException
  */
 @Transactional
 @Slf4j('logger')
-class SpringSamlUserDetailsService extends GormUserDetailsService implements SAMLUserDetailsService {
+class SpringSamlUserDetailsService extends GormUserDetailsService {
 
     String authorityClassName
     String authorityJoinClassName
@@ -53,10 +52,10 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
     Boolean samlUseLocalRoles
 
 
-    public Object loadUserBySAML(SAMLCredential credential) throws UsernameNotFoundException {
-        logger.debug("Loading user - ${credential.toString()}")
-        if (credential) {
-            String username = getSamlUsername(credential)
+    public UserDetails loadUserBySAML(Saml2AuthenticatedPrincipal principal) throws UsernameNotFoundException {
+        logger.debug("Loading user - ${principal.toString()}")
+        if (principal) {
+            String username = getSamlUsername(principal)
             logger.debug("Username ${username}")
             if (!username) {
                 throw new UsernameNotFoundException("No username supplied in saml response.")
@@ -64,9 +63,9 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
 
             def user = generateSecurityUser(username)
             logger.debug("Generated User ${user.username}")
-            user = mapAdditionalAttributes(credential, user)
+            user = mapAdditionalAttributes(principal, user)
             if (user) {
-                def grantedAuthorities = getAuthoritiesForUser(credential, username)
+                def grantedAuthorities = getAuthoritiesForUser(principal, username)
                 if (samlAutoCreateActive) {
                     user = saveUser(user.class, user, grantedAuthorities)
                     // load any new local DB roles
@@ -84,17 +83,17 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
                     def samlAttributes = [:]
                     samlUserAttributeMappings.each { key, value ->
                         try {
-                            samlAttributes."$key" = user."$key"
+                            samlAttributes."$key" = [user."$key"]
                         } catch(MissingPropertyException e) {
                             logger.warn("Failed to get SAML attribute '$key' from ${user.getClass()}. Add the SAML attribute to your User domain class.")
                             logger.error "Error: ${e.message}", e
-                            def samlValue = credential.getAttributeAsString(value)
+                            def samlValue = principal.getAttribute(value)
                             if (samlValue) {
                                 samlAttributes."$key" = samlValue
                             }
                         }
                     }
-                    userDetails.setSamlAttributes(samlAttributes)
+                    userDetails.setAttributes(samlAttributes)
                 }
 
                 return userDetails
@@ -104,22 +103,22 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         }
     }
 
-    protected String getSamlUsername(credential) {
+    protected String getSamlUsername(Saml2AuthenticatedPrincipal principal) {
         logger.debug("getSamlUsername()")
         def usernameAttr = samlUserAttributeMappings?.username
         if ( usernameAttr ) {
-            def value = credential.getAttributeAsString(usernameAttr)
+            def value = principal.getFirstAttribute(usernameAttr).toString()
             logger.debug("Username using attribute '${usernameAttr}': ${value}")
             return value
         } else {
             // if no mapping provided for username attribute then assume it is the returned subject in the assertion
-            return credential.nameID?.value
+            return principal.name
         }
     }
 
-    protected Object mapAdditionalAttributes(SAMLCredential credential, user) {
+    protected Object mapAdditionalAttributes(Saml2AuthenticatedPrincipal principal, user) {
         samlUserAttributeMappings.each { key, value ->
-            def samlValue = credential.getAttributeAsString(value)
+            def samlValue = principal.getFirstAttribute(value).toString()
             if (samlValue) {
                 user."$key" = samlValue
             }
@@ -127,7 +126,7 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         user
     }
 
-    protected Collection<GrantedAuthority> getAuthoritiesForUser(SAMLCredential credential, String username) {
+    protected Collection<GrantedAuthority> getAuthoritiesForUser(Saml2AuthenticatedPrincipal principal, String username) {
         Set<GrantedAuthority> authorities = new HashSet<SimpleGrantedAuthority>()
 
         logger.debug "Determining Authorities for $username"
@@ -138,16 +137,16 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
 
         }
         authorities.addAll (
-            determineSamlRoles( credential )
+            determineSamlRoles( principal )
         )
 
         logger.debug("Returning Authorities with ${authorities?.size()} Authorities added.")
         authorities
     }
 
-    private Set<SimpleGrantedAuthority> determineSamlRoles(SAMLCredential credential) {
+    private Set<SimpleGrantedAuthority> determineSamlRoles(Saml2AuthenticatedPrincipal principal) {
         logger.debug('Using samlUserGroupAttribute: ' + samlUserGroupAttribute)
-        String[] samlGroups = credential.getAttributeAsStringArray(samlUserGroupAttribute)
+        String[] samlGroups = principal.getAttribute(samlUserGroupAttribute)*.toString()
         logger.debug('Using samlGroups: ' + samlGroups)
         logger.debug('User samlUserGroupToRoleMapping: ' + samlUserGroupToRoleMapping)
 
@@ -321,7 +320,7 @@ class SpringSamlUserDetailsService extends GormUserDetailsService implements SAM
         def samlAttributes = [:]
         samlUserAttributeMappings.each { key, value ->
             try {
-                samlAttributes."$key" = user."$key"
+                samlAttributes."$key" = [user."$key"]
             } catch(MissingPropertyException e) {
                 logger.warn("Failed to get SAML attribute '$key' from ${user.getClass()}. Add the SAML attribute to your User domain class.")
                 logger.error "Error: ${e.message}", e
