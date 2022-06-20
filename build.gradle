@@ -2,14 +2,7 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url "https://repo.grails.org/grails/core" }
-        maven { url "https://grailsrepo.rz.tu-bs.de/artifactory/gradle-dev" }
-        maven {
-            credentials {
-                username System.getenv("GRAILSREPO_USER")
-                password System.getenv("GRAILSREPO_PASS")
-            }
-            url "https://grailsrepo.rz.tu-bs.de/artifactory/tubs-grails"
-        }
+        maven { url "https://central.maven.org/maven2/"}
     }
     dependencies {
         classpath "org.grails:grails-gradle-plugin:$grailsGradlePluginVersion"
@@ -32,21 +25,7 @@ apply plugin:"org.grails.grails-gsp"
 repositories {
     mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
-    maven { url "https://grailsrepo.rz.tu-bs.de/artifactory/gradle-dev" }
-
-    // for spring saml
     maven { url "https://central.maven.org/maven2/"}
-    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases"}
-    maven { url "https://build.shibboleth.net/nexus/content/groups/public/"}
-    maven { url "https://code.lds.org/nexus/content/groups/main-repo"}
-    maven { url "https://repository.jboss.org/maven2/"}
-    maven {
-        credentials {
-            username System.getenv("GRAILSREPO_USER")
-            password System.getenv("GRAILSREPO_PASS")
-        }
-        url "https://grailsrepo.rz.tu-bs.de/artifactory/tubs-grails"
-    }
 }
 
 configurations {
